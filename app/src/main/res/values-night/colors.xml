@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Widget renkleri (gece). Uygulama temasındaki M3 tokenlarıyla aynı. -->
+    <color name="widget_text">#F4EAE4</color>
+    <color name="widget_secondary">#C9B4A6</color>
+    <color name="widget_active_text">#FFDCC8</color>
+    <color name="widget_accent">#F97316</color>
+</resources>

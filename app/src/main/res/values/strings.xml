@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Namazgâh</string>
+    <string name="widget_small_label">Vakitler (2x2)</string>
+    <string name="widget_large_label">Vakit Panosu (4x2)</string>
+    <string name="widget_small_description">Şehir ve günün altı vakti</string>
+    <string name="widget_large_description">Günün altı vakti, sıradaki vakit ve kalan süre</string>
+    <string name="widget_countdown_label">Kalan</string>
+</resources>

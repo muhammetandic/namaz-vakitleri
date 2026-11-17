@@ -1,0 +1,9 @@
+<resources>
+    <color name="window_background">#161110</color>
+
+    <!-- Widget renkleri (gündüz). Uygulama temasındaki M3 tokenlarıyla aynı. -->
+    <color name="widget_text">#2B1A12</color>
+    <color name="widget_secondary">#55433A</color>
+    <color name="widget_active_text">#9A3412</color>
+    <color name="widget_accent">#F97316</color>
+</resources>

@@ -1,0 +1,100 @@
+package com.anttech.prayertimes.features.settings.ui
+
+import java.util.Locale
+
+data class CityWithDistricts(
+    val city: String,
+    val districts: List<String>
+)
+
+val TURKISH_CITIES_WITH_DISTRICTS: List<CityWithDistricts> = listOf(
+    CityWithDistricts("Adana", listOf("Aladağ", "Ceyhan", "Çukurova", "Feke", "İmamoğlu", "Karaisalı", "Karataş", "Kozan", "Pozantı", "Saimbeyli", "Sarıçam", "Semerkand", "Tufanbeyli", "Yumurtalık")),
+    CityWithDistricts("Adıyaman", listOf("Çelikhan", "Gerger", "Gölbaşı", "İçel", "Kahta", "Samsat", "Sincik", "Tut")),
+    CityWithDistricts("Afyonkarahisar", listOf("Başmakçı", "Bayat", "Bolvadin", "Çay", "Çobanlar", "Dazkırı", "Dinar", "Emirdağ", "Evciler", "Hocalar", "İhsaniye", "İscehisar", "Kızılören", "Sandıklı", "Sincanlı", "Sultandağı", "Şuhut", "Yalvaç", "Zafer", "Zaferan", "Zaferanlı")),
+    CityWithDistricts("Ağrı", listOf("Diyadin", "Doğubayazıt", "Eleşkirt", "Hamur", "Patnos", "Taşlıçay", "Tutak")),
+    CityWithDistricts("Aksaray", listOf("Ağaçören", "Eskil", "Gülağaç", "Güzelyurt", "Ortaköy", "Sarıyahşi")),
+    CityWithDistricts("Amasya", listOf("Göynücek", "Gümüşhacıköy", "Hamamözü", "Merzifon", "Suluova", "Taşova")),
+    CityWithDistricts("Ankara", listOf("Altındağ", "Ayaş", "Balâ", "Beypazarı", "Çamlıdere", "Çankaya", "Çubuk", "Elmadağ", "Etimesgut", "Evren", "Gölpınar", "Güdül", "Haymana", "Kalecik", "Kayaş", "Kazan", "Keçiören", "Kızılcahamam", "Mamak", "Nallıhan", "Polatlı", "Pursaklar", "Sincan", "Şereflikoçhisar", "Yenimahalle")),
+    CityWithDistricts("Antalya", listOf("Akseki", "Aksu", "Alanya", "Demre", "Döşemealtı", "Elmalı", "Finike", "Gazipaşa", "Gündoğan", "İbradı", "Kale", "Korkuteli", "Kumluca", "Kunduz", "Manavgat", "Serik", "Side", "Tasköprü", "Yalvaç")),
+    CityWithDistricts("Ardahan", listOf("Çıldır", "Göle", "Hanak", "Posof")),
+    CityWithDistricts("Artvin", listOf("Ardanuç", "Arhavi", "Artvin", "Borçka", "Hopa", "Murgul", "Şavşat", "Yusufeli")),
+    CityWithDistricts("Aydın", listOf("Bozdoğan", "Buharkent", "Çine", "Didim", "Efeler", "Germencik", "İncirliova", "Karacasu", "Karpuzlu", "Koçarlı", "Köşk", "Kuşadası", "Kuyucak", "Nazilli", "Söke", "Sultanhisar", "Yenipazar")),
+    CityWithDistricts("Balıkesir", listOf("Ayvalık", "Balya", "Bandırma", "Bigadiç", "Burhaniye", "Dursunbey", "Edremit", "Erdek", "Gömeç", "Gönen", "Havran", "İvrindi", "Kepsut", "Manyas", "Marmara", "Savaştepe", "Sındırgı", "Susurluk")),
+    CityWithDistricts("Bartın", listOf("Amasra", "Kuruçam", "Merkez", "Yenice")),
+    CityWithDistricts("Batman", listOf("Beşiri", "Gercüş", "Hasankeyf", "Kozluk", "Sason", "Şanlıurfa")),
+    CityWithDistricts("Bayburt", listOf("Ağın", "Altındağ", "Merkez", "Sarıça")),
+    CityWithDistricts("Bilecik", listOf("Bozköy", "İnhisar", "Osmaneli", "Pazaryeri", "Söğüt", "Yenipazar")),
+    CityWithDistricts("Bingöl", listOf("Adaköy", "Genç", "Karlıova", "Kiğı", "Solhan", "Yayladere", "Yedisu")),
+    CityWithDistricts("Bitlis", listOf("Adilcevaz", "Ahlat", "Güroymak", "Hizan", "Mutki", "Tatvan")),
+    CityWithDistricts("Bolu", listOf("Dörtdivan", "Göynük", "Mengen", "Mudurnu", "Seben", "Yeniçağ", "Yığılca")),
+    CityWithDistricts("Burdur", listOf("Ağlasun", "Altınyayla", "Bucak", "Çavdır", "Çeltikçi", "Gölhisar", "Karamanlı", "Kemeraltın", "Kılıçlı", "Tefenni", "Yeşilova")),
+    CityWithDistricts("Bursa", listOf("Büyükorhan", "Gemlik", "Gürsu", "Harmancık", "İnegöl", "İznik", "Karacabey", "Keles", "Kestel", "Mudanya", "Nilüfer", "Orhangazi", "Orhaneli", "Osmangazi", "Yenişehir")),
+    CityWithDistricts("Çanakkale", listOf("Ayvacık", "Bayramiç", "Biga", "Çan", "Eceabat", "Ezine", "Gelibolu", "Gökçeada", "Lapseki", "Yenice")),
+    CityWithDistricts("Çankırı", listOf("Atkaracalar", "Bayramören", "Çerkeş", "Eldivan", "Ilgaz", "Kızılırmak", "Korgun", "Orta", "Şabanözü", "Yapraklı", "Yereli")),
+    CityWithDistricts("Çorum", listOf("Alaca", "Bayat", "Boğazkale", "Dodurga", "İskilip", "Kargı", "Laçin", "Mecitözü", "Oğuzlar", "Ortaköy", "Osmancık", "Sungurlu", "Uğurludağ")),
+    CityWithDistricts("Denizli", listOf("Acıpayam", "Babadağ", "Baklan", "Bekilli", "Beyağac", "Bektaş", "Bektaşpaşa", "Bozkurt", "Buldan", "Çal", "Çameli", "Çardak", "Çat", "Çubuklar", "Dodurga", "Göktoprağ", "Göynük", "Kale", "Kavaklar", "Kazanchı", "Kemer", "Kızılören", "Kuyu", "Merkezefendi", "Pamukkale", "Sarayköy", "Serinhisar", "Tavas", "UlubOR", "Yenipazar")),
+    CityWithDistricts("Diyarbakır", listOf("Bağlar", "Bismil", "Çermik", "Çınar", "Çüngüş", "Dicle", "Eğil", "Ergani", "Hani", "Hazro", "Kocaköy", "Kulp", "Lice", "Silvan", "Sur", "Yenişehir")),
+    CityWithDistricts("Düzce", listOf("Akçakoca", "Çilimli", "Gölyaka", "Gümüşova", "İmranlı", "Yığılca")),
+    CityWithDistricts("Edirne", listOf("Enez", "Havsa", "İpsala", "Keşan", "Lalapaşa", "Meriç", "Süloğlu", "Uzunköprü")),
+    CityWithDistricts("Elazığ", listOf("Ağın", "Alacakaya", "Arıcak", "Baskil", "Karakoçan", "Keban", "Kovancılar", "Maden", "Sivrice", "Tortum", "Arpaçay")),
+    CityWithDistricts("Erzincan", listOf("Çayırlı", "İliç", "Kemah", "Kemaliye", "Otlukbeli", "Refahiye", "Tercan", "Üzümlü")),
+    CityWithDistricts("Erzurum", listOf("Aşkale", "Aziziye", "Çat", "Hinis", "Hozat", "İspat", "Karahayıt", "Kazım Karabekir", "Köprüköy", "Narman", "Oğuzlar", "Oluklu", "Pasinler", "Pazaryolu", "Şenkaya", "Tekman", "Tortum", "Uzundere", "Yakutiye")),
+    CityWithDistricts("Eskişehir", listOf("Alpu", "Beylikova", "Çifteler", "Günyüzü", "Han", "İnönü", "Mihalgazi", "Mihalıççık", "Odunpazarı", "Sarıcakaya", "Seyitgazi", "Sivrihisar", "Tepebaşı")),
+    CityWithDistricts("Gaziantep", listOf("İslahiye", "Karkamış", "Nizip", "Nurdağı", "Oğuzeli", "Şahinbey", "Şehitkemal", "Şehitkemal Tanrısevi", "Yavuzeli")),
+    CityWithDistricts("Giresun", listOf("Alucra", "Bulancak", "Çamoluk", "Çanakçı", "Dereli", "Doğankent", "Espiye", "Eynesil", "Görele", "Güce", "Kesap", "Piraziz", "Şebinkarahisar", "Tirebolu", "Yağlıolar")),
+    CityWithDistricts("Gümüşhane", listOf("Kelkit", "Köse", "Köprübaşı", "Merkez", "Şavşat", "Yosun")),
+    CityWithDistricts("Hakkari", listOf("Çukurca", "Derecik", "Şemdinli", "Yüksekova")),
+    CityWithDistricts("Hatay", listOf("Altınözü", "Antakya", "Arsuz", "Belen", "Defne", "Dörtyol", "Erzin", "Hassa", "İskenderun", "Kırıkhan", "Kumlu", "Payas", "Reyhanlı", "Samandağ", "Yayladağ")),
+    CityWithDistricts("Iğdır", listOf("Aralık", "Karakoyunlu", "Tuzluca")),
+    CityWithDistricts("Isparta", listOf("Aksu", "Atabey", "Eğirdir", "Göllüdağ", "Keçiborlu", "Senirkent", "Sütçüler", "Şarkikaraağaç", "Uluborlu", "Yalvaç", "Yenişarbademli")),
+    CityWithDistricts("İstanbul", listOf("Adalar", "Arnavutköy", "Ataşehir", "Avcılar", "Bağcılar", "Bahçelievler", "Bakırköy", "Başakşehir", "Bayrampaşa", "Beşiktaş", "Beykoz", "Beyoğlu", "Büyükçekmece", "Çatalca", "Çekmeköy", "Esenler", "Esenyurt", "Eyüpsultan", "Fatih", "Gaziosmanpaşa", "Güngören", "Kadıköy", "Kağıthane", "Kartal", "Küçükçekmece", "Maltepe", "Pendik", "Sancaktepe", "Sarıyer", "Silivri", "Sultanbeyli", "Sultangazi", "Şile", "Şişli", "Umraniye", "Üsküdar", "Zeytinburnu")),
+    CityWithDistricts("İzmir", listOf("Aliağa", "Aşağıdd", "Balçova", "Bayındır", "Bayraklı", "Bergama", "Beydağ", "Bornova", "Çeşme", "Çiğli", "Dikili", "Foça", "Gaziemir", "Güzelbahçe", "Karabağlar", "Karşıyaka", "Kemalpaşa", "Kınık", "Kiraz", "Manisa", "Menderes", "Menemen", "Ödemiş", "Seferihisar", "Selçuk", "Tire", "Torbalı", "Üzümlü", "Yenişahra", "Yunusemre")),
+    CityWithDistricts("Kahramanmaraş", listOf("Afşin", "Andırın", "Çağlayancerit", "Dulkadiroğlu", "Ekinözü", "Elbistan", "Göksun", "Nurhak", "Pazarcık", "Türkoğlu")),
+    CityWithDistricts("Karabük", listOf("Eflani", "Eskipazar", "Merkez", "Ovacık", "Safranbolu", "Yenice")),
+    CityWithDistricts("Karaman", listOf("Ayaş", "Baits", "Ermenek", "Karaman", "Kazımkarabekir", "Sarıveliler")),
+    CityWithDistricts("Kars", listOf("Akyaka", "Arpaçay", "Digor", "Kağızman", "Merkez", "Sarıkamış", "Selim", "Susuz")),
+    CityWithDistricts("Kastamonu", listOf("Abana", "Ağlı", "Araç", "Azdavay", "Bozkurt", "Cide", "Çatalsefer", "Çatalseferi", "Çaybaşı", "Daday", "Devrekani", "Doğanyurt", "Hanönü", "İhsangazi", "İnebolu", "Küre", "Pınarbaşı", "Seydiler", "Şenpazar", "Taşköprü", "Tosya")),
+    CityWithDistricts("Kayseri", listOf("Akkışla", "Bünyan", "Develi", "Felahiye", "Hacılar", "İncesu", "Kocasinan", "Melikgazi", "Özvatan", "Pınarbaşı", "Sarıoğlan", "Sarız", "Talas", "Tomarza", "Yahyalı", "Yeşilhisar", "Akköse")),
+    CityWithDistricts("Kırıkkale", listOf("Bahşılı", "Balışeyh", "Çelebi", "Delice", "Karakeçili", "Keskin", "Merkez", "Sulakyurt", "Yaka")),
+    CityWithDistricts("Kırklareli", listOf("Babaeski", "Demirköy", "Lüleburgaz", "Pehlivanköy", "Pınarhisar", "Vize")),
+    CityWithDistricts("Kırşehir", listOf("Akçakent", "Akpınar", "Boztepe", "Çiçekdağı", "Kaman", "Mucur", "İnceğiz")),
+    CityWithDistricts("Kilis", listOf("Elbeyi", "Merkez", "Musabeyli", "Polateli")),
+    CityWithDistricts("Kocaeli", listOf("Başiskele", "Çayırova", "Darıca", "Derince", "Dilovası", "Gebze", "Gölcük", "İzmit", "Kandıra", "Karamürsel", "Körfez", "Nilüfer", "Şile", "Yarımca")),
+    CityWithDistricts("Konya", listOf("Ahırlı", "Akören", "Akşehir", "Altınekin", "Beyşehir", "Bozkır", "Cihanbeyli", "Çeltik", "Çumra", "Derbent", "Derebucak", "Doğanhisar", "Emirgazi", "Ereğli", "Güneysınır", "Hüyük", "Kadınhanı", "Karapınar", "Karaman", "Karahayıt", "Kulu", "Meram", "Sarayönü", "Selçuklu", "Seydişehir", "Taşkent", "Taşkın", "Tuzlukçu", "Yalımahmut", "Yunak")),
+    CityWithDistricts("Kütahya", listOf("Altıntaş", "Aslanapa", "Çavdarhisar", "Domaniç", "Dumlupınar", "Emet", "Gediz", "Hisarcık", "Merkez", "Pazarlar", "Şaphane", "Simav", "Tavşanlı", "Yenipazar")),
+    CityWithDistricts("Malatya", listOf("Arapgir", "Arguvan", "Battalgazi", "Darende", "Divriği", "Doğanşehir", "Hekimhan", "Kale", "Kuluncak", "Pınarbaşı", "Reşadiye", "Söğütlü", "Yığılca")),
+    CityWithDistricts("Manisa", listOf("Ahmetli", "Akhisar", "Alaşehir", "Demirci", "Gölmarmara", "Gördes", "Köprübaşı", "Kula", "Salihli", "Saruhanlı", "Selendi", "Soma", "Şehzadeler", "Yunusemre", "İzmir")),
+    CityWithDistricts("Mardin", listOf("Dargeçit", "Derik", "Kızıltepe", "Mazıdağı", "Midyat", "Nusaybin", "Ömerli", "Savur", "Dicle")),
+    CityWithDistricts("Mersin", listOf("Akdeniz", "Anamur", "Aydıncık", "Bozyazı", "Çamliyayla", "Erdemli", "Gülnar", "Mezitli", "Silifke", "Tarsus", "Toroslar", "Yenişehir")),
+    CityWithDistricts("Muğla", listOf("Adatepe", "Bodrum", "Dalaman", "Datça", "Fethiye", "Kavaklıdere", "Köyceğiz", "Marmaris", "Milas", "Ortaca", "Seydikemer", "Ula", "Yatağan")),
+    CityWithDistricts("Muş", listOf("Bulanık", "Hasköy", "Korkut", "Malazgirt", "Merkez", "Vartov")),
+    CityWithDistricts("Nevşehir", listOf("Acıgöl", "Avanos", "Derinkuyu", "Göreme", "Hacıbey", "Kozaklı", "Merkez", "Ürgüp")),
+    CityWithDistricts("Niğde", listOf("Altunhisar", "Bor", "Çamardı", "Çiftlik", "Merkez", "Ulukışla")),
+    CityWithDistricts("Ordu", listOf("Akkuş", "Altınordu", "Aybastı", "Çamaş", "Çatalpınar", "Çaybaşı", "Fatsa", "Gölköy", "Gülyalı", "Gürgentepe", "İkizce", "Kabataş", "Korgan", "Kumluca", "Mesudiye", "Ulubey", "Ünye")),
+    CityWithDistricts("Osmaniye", listOf("Bahçe", "Düziçi", "Hasanbeyli", "Kadirli", "Sumbas", "Toprakkale")),
+    CityWithDistricts("Rize", listOf("Ardeşen", "Çamlıhemşin", "Çayeli", "Derepazarı", "Fındıklı", "Güneysu", "Hemşin", "İkizdere", "İyidere", "Kalkandere", "Pazar", "Reşadiye")),
+    CityWithDistricts("Sakarya", listOf("Adapazarı", "Akyazı", "Arifiye", "Erenler", "Ferizli", "Geyve", "Hendek", "Karapürçek", "Karasu", "Kaynarca", "Kocaali", "Pamukova", "Sapcak", "Söğütlü", "Taraklı")),
+    CityWithDistricts("Samsun", listOf("Alaçam", "Asarcık", "Atakum", "Ayvacık", "Bafra", "Canik", "Çarşamba", "Havza", "İlkadım", "Kavak", "Ladik", "Salıpazarı", "Tekkeköy", "Vezirköprü", "Yakakent")),
+    CityWithDistricts("Siirt", listOf("Baykan", "Eruh", "Kurtalan", "Merkez", "Pervari", "Şirvan", "Tillo")),
+    CityWithDistricts("Sinop", listOf("Ayancık", "Boyabat", "Dikmen", "Durağan", "Erfelek", "Gerze", "Merkez", "Saraydüzü", "Türkeli")),
+    CityWithDistricts("Sivas", listOf("Akıncılar", "Altınyayla", "Çıralı", "Divriği", "Doğanşar", "Gemerek", "Gölova", "Gürün", "İmranlı", "Kangal", "Koyulhisar", "Merkez", "Susuz", "Yıldızeli", "Zara")),
+    CityWithDistricts("Şanlıurfa", listOf("Akçakale", "Birecik", "Bozova", "Ceylanpınar", "Eyyübiye", "Halfeti", "Haliliye", "Harran", "Hilvan", "Karaköprü", "Siverek", "Viranşehir")),
+    CityWithDistricts("Şırnak", listOf("Beytüşşebap", "Cizre", "Güçlükonak", "İdil", "Merkez", "Sergazi", "Şemdinli", "Tekman", "Uludere")),
+    CityWithDistricts("Tekirdağ", listOf("Çerkezköy", "Çorlu", "Ergene", "Hayrabolu", "Malkara", "Muratlı", "Saray", "Şarköy", "Süleymanpaşa")),
+    CityWithDistricts("Tokat", listOf("Almus", "Artova", "Başçiftlik", "Erbaa", "Niksar", "Pazar", "Reşadiye", "Sulusaray", "Turhal", "Yeşilyurt", "Zile")),
+    CityWithDistricts("Trabzon", listOf("Akçadağ", "Aksu", "Araklı", "Arsin", "Beşikdüzü", "Çarşıbaşı", "Çaykara", "Dernekpazarı", "Düzköy", "Hayrat", "Köprübaşı", "Makak", "Sürmene", "Şalpazarı", "Tekkeköy", "Yomra")),
+    CityWithDistricts("Tunceli", listOf("Çanakçı", "Dicle", "Hozat", "Mazgirt", "Merkez", "Ovacık", "Pülümür", "Sarpkın")),
+    CityWithDistricts("Uşak", listOf("Banaz", "Eşme", "Karahallı", "Merkez", "Sivaslı", "Ulubey")),
+    CityWithDistricts("Van", listOf("Başkale", "Çataş", "Çatak", "Edremit", "Erciş", "Eşme", "Gevaş", "Gürpınar", "İpekyolu", "Mürsel", "Özalp", "Saray", "Tusba")),
+    CityWithDistricts("Yalova", listOf("Altınova", "Armutlu", "Çınarcık", "Çiftlikköy", "Merkez", "Termal")),
+    CityWithDistricts("Yozgat", listOf("Akıncılar", "Aşkale", "Çandır", "Çayıralan", "Çayırpınar", "Dereli", "Doğanşar", "Elmalıbaşı", "Göynük", "Kadışehri", "Merkez", "Saraykent", "Sarıkaya", "Şefaatli", "Yenifakılı", "Yenipazar")),
+    CityWithDistricts("Zonguldak", listOf("Alaplı", "Çaycuma", "Devrek", "Görele", "Gökçebey", "Merkez", "Karadenizereğli", "Kilimli", "Kozlu", "Reşadiye"))
+)
+
+fun filterCities(query: String): List<String> {
+    val normalized = query.trim().lowercase(Locale("tr", "TR"))
+    if (normalized.isEmpty()) return TURKISH_CITIES_WITH_DISTRICTS.map { it.city }
+    return TURKISH_CITIES_WITH_DISTRICTS
+        .filter { it.city.lowercase(Locale("tr", "TR")).contains(normalized) }
+        .map { it.city }
+}

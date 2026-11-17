@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Location Permissions -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+    <!-- Alarm & Notification Permissions -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <!-- Android 14+ full-screen intent permission for sahur alarm -->
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+
+    <!-- Network Permission for syncing prayer times -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <application
+        android:name="com.anttech.prayertimes.NamazVaktiApplication"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.NamazVakitleri">
+        
+        <activity
+            android:name="com.anttech.prayertimes.MainActivity"
+            android:exported="true"
+            android:theme="@style/Theme.NamazVakitleri"
+            android:showOnLockScreen="true"
+            android:turnScreenOn="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Boot receiver to reschedule exact alarms when phone reboots -->
+        <receiver
+            android:name="com.anttech.prayertimes.core.notifications.BootCompletedReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Alarm BroadcastReceiver for Adhan and reminders -->
+        <receiver
+            android:name="com.anttech.prayertimes.core.notifications.AlarmReceiver"
+            android:exported="false" />
+
+        <!-- Sahur alarmı aksiyon alıcısı (Durdur, 5 dk Ertele) -->
+        <receiver
+            android:name="com.anttech.prayertimes.core.notifications.SahurAlarmActionReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.anttech.prayertimes.action.SAHUR_STOP" />
+                <action android:name="com.anttech.prayertimes.action.SAHUR_SNOOZE" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Sahur test bildirimi tetikleyici (ADB için) -->
+        <receiver
+            android:name="com.anttech.prayertimes.core.notifications.TestSahurTriggerReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.anttech.prayertimes.action.TEST_SAHUR_NOTIFICATION" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Test activity for sahur alarm (ADB launch) -->
+        <activity
+            android:name="com.anttech.prayertimes.core.notifications.TestSahurActivity"
+            android:exported="true"
+            android:excludeFromRecents="true" />
+
+        <activity
+            android:name="com.anttech.prayertimes.core.notifications.SahurAlarmActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true" />
+
+        <!-- Uygulama içi ses seviyesiyle vakit sesi çalar (ön plan servisi) -->
+        <service
+            android:name="com.anttech.prayertimes.core.notifications.AdhanPlaybackService"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback" />
+
+        <!-- Small Glance AppWidget (2x2) -->
+        <receiver
+            android:name="com.anttech.prayertimes.features.widget.SmallPrayerWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_small_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/small_prayer_widget_info" />
+        </receiver>
+
+        <!-- Large Glance AppWidget (4x2) -->
+        <receiver
+            android:name="com.anttech.prayertimes.features.widget.LargePrayerWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_large_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/large_prayer_widget_info" />
+        </receiver>
+
+        <!-- WorkManager varsayılan başlatıcısını kaldır; Hilt tabanlı
+             isteğe bağlı başlatma NamazVaktiApplication üzerinden yapılır. -->
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge">
+            <meta-data
+                android:name="androidx.work.WorkManagerInitializer"
+                android:value="androidx.startup"
+                tools:node="remove" />
+        </provider>
+
+    </application>
+
+</manifest>
