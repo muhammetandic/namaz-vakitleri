@@ -92,3 +92,7 @@ app/src/main/java/com/anttech/prayertimes/
 Tests live under `app/src/test` and `app/src/androidTest`.
 
 See [`AGENTS.md`](AGENTS.md) for architecture rules, TDD standards, and project decisions.
+
+## License
+
+Released under the [MIT License](LICENSE).
