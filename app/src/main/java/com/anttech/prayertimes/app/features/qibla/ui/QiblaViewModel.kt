@@ -39,13 +39,19 @@ class QiblaViewModel @Inject constructor(
             is QiblaIntent.StartCompass -> startCompass(intent.latitude, intent.longitude, intent.cityName)
             is QiblaIntent.StopCompass -> stopCompass()
             is QiblaIntent.OnAzimuthChanged -> updateAzimuth(intent.azimuth)
+            is QiblaIntent.SetDisplayMode -> setDisplayMode(intent.mode)
         }
+    }
+
+    private fun setDisplayMode(mode: QiblaDisplayMode) {
+        _uiState.update { it.copy(displayMode = mode) }
     }
 
     private fun startCompass(latitude: Double, longitude: Double, cityName: String) {
         val qiblaBearing = calculateQiblaAngleUseCase.calculateQiblaBearing(latitude, longitude)
         val sensorAvailable = compassSensorManager.isSensorAvailable()
         val needleAngle = if (!sensorAvailable) qiblaBearing else calculateQiblaAngleUseCase.calculateNeedleAngle(qiblaBearing, 0f)
+        val initialMode = if (!sensorAvailable) QiblaDisplayMode.MAP else _uiState.value.displayMode
 
         _uiState.update {
             it.copy(
@@ -55,7 +61,8 @@ class QiblaViewModel @Inject constructor(
                 cityName = cityName,
                 qiblaBearing = qiblaBearing,
                 needleAngle = needleAngle,
-                isSensorAvailable = sensorAvailable
+                isSensorAvailable = sensorAvailable,
+                displayMode = initialMode
             )
         }
 

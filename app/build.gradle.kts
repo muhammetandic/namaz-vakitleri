@@ -77,6 +77,7 @@ dependencies {
     implementation(libs.androidx.glance.appwidget)
     implementation(libs.androidx.glance.material3)
     implementation(libs.androidx.media3.exoplayer)
+    implementation(libs.osmdroid.android)
 
     // WorkManager + Hilt worker (akıllı aylık senkronizasyon)
     implementation(libs.androidx.work.runtime)

@@ -139,8 +139,35 @@ class QiblaViewModelTest {
             val state = expectMostRecentItem()
             assertThat(state.isLoading).isFalse()
             assertThat(state.isSensorAvailable).isFalse()
+            assertThat(state.displayMode).isEqualTo(QiblaDisplayMode.MAP)
             assertThat(state.qiblaBearing).isWithin(1.5f).of(151.7f)
             assertThat(state.needleAngle).isEqualTo(state.qiblaBearing)
+        }
+    }
+
+    @Test
+    fun `when SetDisplayMode intent is sent, displayMode is toggled`() = runTest {
+        every { compassSensorManager.isSensorAvailable() } returns true
+        every { compassSensorManager.getAzimuthFlow() } returns flowOf(0f)
+
+        val viewModel = QiblaViewModel(
+            compassSensorManager = compassSensorManager,
+            calculateQiblaAngleUseCase = calculateQiblaAngleUseCase
+        )
+
+        viewModel.uiState.test {
+            awaitItem()
+            viewModel.sendIntent(QiblaIntent.StartCompass(41.0082, 28.9784, "İstanbul"))
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            val state1 = expectMostRecentItem()
+            assertThat(state1.displayMode).isEqualTo(QiblaDisplayMode.COMPASS)
+
+            viewModel.sendIntent(QiblaIntent.SetDisplayMode(QiblaDisplayMode.MAP))
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            val state2 = expectMostRecentItem()
+            assertThat(state2.displayMode).isEqualTo(QiblaDisplayMode.MAP)
         }
     }
 }

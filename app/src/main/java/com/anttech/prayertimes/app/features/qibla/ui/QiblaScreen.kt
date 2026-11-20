@@ -94,172 +94,230 @@ fun QiblaScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // Üst Bilgi Kartı (Açı ve Şehir)
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
-                ),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = if (state.cityName.isNotEmpty()) state.cityName else "Konum Aranıyor...",
-                        fontSize = (18 * fontScale).sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "Kıble Açısı: ${state.qiblaBearing.roundToInt()}°",
-                        fontSize = (26 * fontScale).sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.testTag("qibla_bearing_text")
-                    )
-                }
-            }
-
-            // Kıble Durum Bildirimi (Yeşil Parlama)
-            val ringColor by animateColorAsState(
-                targetValue = if (state.isAligned) ActivePrayerGlow else MaterialTheme.colorScheme.outlineVariant,
-                label = "RingColor"
-            )
-
-            if (!state.isSensorAvailable) {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("qibla_no_sensor_warning"),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.85f),
-                        contentColor = MaterialTheme.colorScheme.onErrorContainer
-                    ),
-                    shape = RoundedCornerShape(14.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(14.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Warning,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.size(28.dp)
-                        )
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Column {
-                            Text(
-                                text = "Manyetik Pusula Sensörü Yok",
-                                fontSize = (15 * fontScale).sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = "Cihazınızda pusula (manyetometre) sensörü bulunmadığı için canlı ibre dönemiyor. Kıble yönü olarak yukarıdaki ${state.qiblaBearing.roundToInt()}° açısını kullanabilirsiniz.",
-                                fontSize = (12.5f * fontScale).sp,
-                                lineHeight = 17.sp
-                            )
-                        }
-                    }
-                }
-            } else if (state.isAligned) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.testTag("qibla_aligned_indicator")
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.CheckCircle,
-                        contentDescription = "Kıble Bulundu",
-                        tint = ActivePrayerGlow,
-                        modifier = Modifier.size(28.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Kıbleye Yöneldiniz",
-                        fontSize = (22 * fontScale).sp,
-                        fontWeight = FontWeight.Bold,
-                        color = ActivePrayerGlow
-                    )
-                }
-            } else {
-                Text(
-                    text = "Pusulayı çevirerek yeşil göstergeyi hedefleyin",
-                    fontSize = (15 * fontScale).sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center
-                )
-            }
-
-            // Ana Pusula Kadranı
-            Box(
-                modifier = Modifier
-                    .size(280.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                    .border(width = if (state.isAligned) 6.dp else 3.dp, color = ringColor, shape = CircleShape)
-                    .testTag("compass_dial"),
-                contentAlignment = Alignment.Center
-            ) {
-                // Pusula Dereceleri & Harfler
-                Text(
-                    text = "K", // Kuzey
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Red,
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .padding(top = 10.dp)
-                )
-
-                // Dönen Kıble İbresi
-                val animatedAngle by animateFloatAsState(
-                    targetValue = state.needleAngle,
-                    label = "NeedleAngle"
-                )
-
-                CompassNeedle(
-                    rotationDegrees = animatedAngle,
-                    isAligned = state.isAligned,
-                    centerColor = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier
-                        .size(240.dp)
-                        .testTag("compass_needle")
-                )
-            }
-
-            // Alt Bilgi & Kalibrasyon Notu
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
+            // Mod Değiştirici: Pusula | Harita
+            PrimaryTabRow(
+                selectedTabIndex = if (state.displayMode == QiblaDisplayMode.COMPASS) 0 else 1,
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.primary,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 12.dp)
+                    .testTag("qibla_mode_tabs")
+            ) {
+                Tab(
+                    selected = state.displayMode == QiblaDisplayMode.COMPASS,
+                    onClick = { onIntent(QiblaIntent.SetDisplayMode(QiblaDisplayMode.COMPASS)) },
+                    text = {
+                        Text(
+                            text = "Pusula",
+                            fontSize = (15 * fontScale).sp,
+                            fontWeight = if (state.displayMode == QiblaDisplayMode.COMPASS) FontWeight.Bold else FontWeight.Normal
+                        )
+                    },
+                    modifier = Modifier.testTag("tab_qibla_compass")
+                )
+                Tab(
+                    selected = state.displayMode == QiblaDisplayMode.MAP,
+                    onClick = { onIntent(QiblaIntent.SetDisplayMode(QiblaDisplayMode.MAP)) },
+                    text = {
+                        Text(
+                            text = "Harita",
+                            fontSize = (15 * fontScale).sp,
+                            fontWeight = if (state.displayMode == QiblaDisplayMode.MAP) FontWeight.Bold else FontWeight.Normal
+                        )
+                    },
+                    modifier = Modifier.testTag("tab_qibla_map")
+                )
+            }
+
+            when (state.displayMode) {
+                QiblaDisplayMode.COMPASS -> CompassContent(state = state, fontScale = fontScale)
+                QiblaDisplayMode.MAP -> QiblaMapContent(
+                    userLat = state.userLatitude ?: 41.0082,
+                    userLng = state.userLongitude ?: 28.9784,
+                    cityName = state.cityName,
+                    qiblaBearing = state.qiblaBearing,
+                    fontScale = fontScale,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun CompassContent(
+    state: QiblaUiState,
+    fontScale: Float
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.SpaceBetween
+    ) {
+        // Üst Bilgi Kartı (Açı ve Şehir)
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant
+            ),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = if (state.cityName.isNotEmpty()) state.cityName else "Konum Aranıyor...",
+                    fontSize = (18 * fontScale).sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Kıble Açısı: ${state.qiblaBearing.roundToInt()}°",
+                    fontSize = (26 * fontScale).sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.testTag("qibla_bearing_text")
+                )
+            }
+        }
+
+        // Kıble Durum Bildirimi (Yeşil Parlama)
+        val ringColor by animateColorAsState(
+            targetValue = if (state.isAligned) ActivePrayerGlow else MaterialTheme.colorScheme.outlineVariant,
+            label = "RingColor"
+        )
+
+        if (!state.isSensorAvailable) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("qibla_no_sensor_warning"),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.85f),
+                    contentColor = MaterialTheme.colorScheme.onErrorContainer
+                ),
+                shape = RoundedCornerShape(14.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(14.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Warning,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(28.dp)
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Text(
+                            text = "Manyetik Pusula Sensörü Yok",
+                            fontSize = (15 * fontScale).sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = "Cihazınızda pusula (manyetometre) sensörü bulunmadığı için canlı ibre dönemiyor. Yukarıdaki 'Harita' sekmesine geçerek sokağınızdan Kâbe'ye uzanan çizgiyi görebilirsiniz.",
+                            fontSize = (12.5f * fontScale).sp,
+                            lineHeight = 17.sp
+                        )
+                    }
+                }
+            }
+        } else if (state.isAligned) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.testTag("qibla_aligned_indicator")
             ) {
                 Icon(
-                    imageVector = Icons.Default.Info,
-                    contentDescription = "Pusula bilgisi",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(20.dp)
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = "Kıble Bulundu",
+                    tint = ActivePrayerGlow,
+                    modifier = Modifier.size(28.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = if (state.isSensorAvailable) {
-                        "Pusula sapması durumunda telefonunuzu havada 8 şeklinde hareket ettiriniz."
-                    } else {
-                        "Harita veya analog pusulada Kuzey (0°) yönünü bulunuz, telefonu ${state.qiblaBearing.roundToInt()}° açısına çeviriniz."
-                    },
-                    fontSize = (12 * fontScale).sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    text = "Kıbleye Yöneldiniz",
+                    fontSize = (22 * fontScale).sp,
+                    fontWeight = FontWeight.Bold,
+                    color = ActivePrayerGlow
                 )
             }
+        } else {
+            Text(
+                text = "Pusulayı çevirerek yeşil göstergeyi hedefleyin",
+                fontSize = (15 * fontScale).sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+        }
+
+        // Ana Pusula Kadranı
+        Box(
+            modifier = Modifier
+                .size(280.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                .border(width = if (state.isAligned) 6.dp else 3.dp, color = ringColor, shape = CircleShape)
+                .testTag("compass_dial"),
+            contentAlignment = Alignment.Center
+        ) {
+            // Pusula Dereceleri & Harfler
+            Text(
+                text = "K", // Kuzey
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Red,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 10.dp)
+            )
+
+            // Dönen Kıble İbresi
+            val animatedAngle by animateFloatAsState(
+                targetValue = state.needleAngle,
+                label = "NeedleAngle"
+            )
+
+            CompassNeedle(
+                rotationDegrees = animatedAngle,
+                isAligned = state.isAligned,
+                centerColor = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier
+                    .size(240.dp)
+                    .testTag("compass_needle")
+            )
+        }
+
+        // Alt Bilgi & Kalibrasyon Notu
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 12.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Info,
+                contentDescription = "Pusula bilgisi",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = if (state.isSensorAvailable) {
+                    "Pusula sapması durumunda telefonunuzu havada 8 şeklinde hareket ettiriniz."
+                } else {
+                    "Harita sekmesinden bina ve sokak doğrultunuzu Kâbe çizgisiyle kolayca hizalayabilirsiniz."
+                },
+                fontSize = (12 * fontScale).sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
