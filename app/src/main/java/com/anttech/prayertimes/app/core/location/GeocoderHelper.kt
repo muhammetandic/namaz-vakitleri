@@ -9,8 +9,9 @@ import kotlin.coroutines.resume
 
 open class GeocoderHelper(private val context: Context) {
 
+    @Suppress("DEPRECATION")
     open fun getCityAndDistrict(latitude: Double, longitude: Double): Pair<String, String?> {
-        val geocoder = Geocoder(context, Locale("tr", "TR"))
+        val geocoder = Geocoder(context, Locale.forLanguageTag("tr-TR"))
         return try {
             val addresses = geocoder.getFromLocation(latitude, longitude, 1)
             if (!addresses.isNullOrEmpty()) {
@@ -30,9 +31,10 @@ open class GeocoderHelper(private val context: Context) {
      * Elle seçilen şehir/ilçe için enlem-boylam döndürür (ileri geocode).
      * Sonuç bulunamazsa veya hata olursa null döner; çağıran eski konumu korur.
      */
+    @Suppress("DEPRECATION")
     open fun getCoordinatesForCity(city: String, district: String?): Pair<Double, Double>? {
         return try {
-            val geocoder = Geocoder(context, Locale("tr", "TR"))
+            val geocoder = Geocoder(context, Locale.forLanguageTag("tr-TR"))
             val query = if (!district.isNullOrBlank() && district != city) {
                 "$district, $city, Türkiye"
             } else {

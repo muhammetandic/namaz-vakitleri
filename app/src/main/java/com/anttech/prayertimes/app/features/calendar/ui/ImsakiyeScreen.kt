@@ -46,8 +46,8 @@ import com.anttech.prayertimes.features.calendar.domain.ImsakiyeDay
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-private val HERO_DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("d MMMM EEEE", Locale("tr", "TR"))
-private val TRACKING_DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("d MMMM yyyy", Locale("tr", "TR"))
+private val HERO_DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("d MMMM EEEE", Locale.forLanguageTag("tr-TR"))
+private val TRACKING_DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("d MMMM yyyy", Locale.forLanguageTag("tr-TR"))
 
 /** Solid white panels on the brand hero gradient, with deep burnt-orange type. */
 private val TimeTileBackground = Color.White
@@ -100,7 +100,7 @@ fun ImsakiyeScreen(
                             )
                         }
                         IconButton(
-                            onClick = { /* Refresh handled by parent */ },
+                            onClick = { onIntent(ImsakiyeIntent.LoadImsakiye(state.city, state.yearMonth)) },
                             modifier = Modifier.testTag("refresh_imsakiye_button")
                         ) {
                             Icon(
@@ -232,7 +232,7 @@ private fun TodayImsakiyeCard(
                 ) {
                     Text(
                         text = today.date.format(HERO_DATE_FORMATTER)
-                            .replaceFirstChar { it.titlecase(Locale("tr", "TR")) },
+                            .replaceFirstChar { it.titlecase(Locale.forLanguageTag("tr-TR")) },
                         fontSize = (14 * scale).sp,
                         fontWeight = FontWeight.Bold,
                         color = if (isForbidden) contentColor else Color.White,
@@ -361,7 +361,7 @@ private fun TimeTile(
             .padding(horizontal = 10.dp, vertical = 14.dp)
     ) {
         Text(
-            text = label.uppercase(Locale("tr", "TR")),
+            text = label.uppercase(Locale.forLanguageTag("tr-TR")),
             fontSize = (12 * scale).sp,
             fontWeight = FontWeight.SemiBold,
             letterSpacing = 0.6.sp,
@@ -578,13 +578,13 @@ private fun TrackingRow(
 ) {
     val actualContainerColor = if (isReadOnly) containerColor.copy(alpha = 0.5f) else containerColor
     val actualContentColor = if (isReadOnly) MaterialTheme.colorScheme.onSurfaceVariant else contentColor
-    val shouldHandleClick = onClick != null && !isReadOnly
+    val clickAction = onClick?.takeIf { !isReadOnly }
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 3.dp)
-            .then(if (shouldHandleClick) Modifier.clickable { onClick!!() } else Modifier),
+            .then(if (clickAction != null) Modifier.clickable { clickAction() } else Modifier),
         colors = CardDefaults.cardColors(
             containerColor = actualContainerColor,
             contentColor = actualContentColor

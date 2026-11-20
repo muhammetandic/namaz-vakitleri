@@ -139,7 +139,6 @@ class TimesViewModel @Inject constructor(
             // Then load from DB with timeout
             val times: com.anttech.prayertimes.features.times.domain.PrayerTimes? = withTimeoutOrNull(5000L) {
                 repository.getPrayerTimesForDate(city, today).firstOrNull()
-                    ?: repository.getPrayerTimesForDate(city, today).firstOrNull()
             }
             
             if (times != null) {

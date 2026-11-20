@@ -20,10 +20,10 @@ abstract class AppDatabase : RoomDatabase() {
 
     companion object {
         val MIGRATION_2_3 = object : Migration(2, 3) {
-            override fun migrate(database: SupportSQLiteDatabase) {
+            override fun migrate(db: SupportSQLiteDatabase) {
                 // Migrate existing prayer_times: preserve data, add Hijri columns
                 // Since Room doesn't always handle ALTER TABLE well, we recreate the table
-                database.execSQL("""
+                db.execSQL("""
                     CREATE TABLE prayer_times_new (
                         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                         city TEXT NOT NULL,
@@ -43,21 +43,21 @@ abstract class AppDatabase : RoomDatabase() {
                 """.trimIndent())
 
                 // Copy existing data to new table
-                database.execSQL("""
+                db.execSQL("""
                     INSERT INTO prayer_times_new (id, city, date, imsak, gunes, ogle, ikindi, aksam, yatsi, tomorrowImsak, hijriDay, hijriMonth, hijriMonthName, hijriYear)
                     SELECT id, city, date, imsak, gunes, ogle, ikindi, aksam, yatsi, tomorrowImsak, 1, 1, '', 1448
                     FROM prayer_times
                 """.trimIndent())
 
                 // Drop old table and rename
-                database.execSQL("DROP TABLE prayer_times")
-                database.execSQL("ALTER TABLE prayer_times_new RENAME TO prayer_times")
+                db.execSQL("DROP TABLE prayer_times")
+                db.execSQL("ALTER TABLE prayer_times_new RENAME TO prayer_times")
 
                 // Create index on city+date (matching entity @Index)
-                database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_prayer_times_city_date ON prayer_times (city, date)")
+                db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_prayer_times_city_date ON prayer_times (city, date)")
 
                 // Create fast_tracking table (matching FastTrackingEntity exactly)
-                database.execSQL("""
+                db.execSQL("""
                     CREATE TABLE IF NOT EXISTS fast_tracking (
                         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                         city TEXT NOT NULL,
@@ -70,7 +70,7 @@ abstract class AppDatabase : RoomDatabase() {
                         isForbidden INTEGER NOT NULL DEFAULT 0
                     )
                 """.trimIndent())
-                database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_fast_tracking_city_date ON fast_tracking (city, date)")
+                db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_fast_tracking_city_date ON fast_tracking (city, date)")
             }
         }
     }

@@ -324,7 +324,7 @@ private fun turkishMonthLabel(yearMonth: String): String {
     if (yearMonth.isBlank()) return "Aylık İmsakiye"
     return runCatching {
         YearMonth.parse(yearMonth)
-            .format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale("tr", "TR")))
-            .replaceFirstChar { it.titlecase(Locale("tr", "TR")) }
+            .format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale.forLanguageTag("tr-TR")))
+            .replaceFirstChar { it.titlecase(Locale.forLanguageTag("tr-TR")) }
     }.getOrElse { yearMonth }
 }

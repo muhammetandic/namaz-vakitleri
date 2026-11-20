@@ -43,7 +43,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 private val TIME_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
-private val DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("d MMMM EEEE", Locale("tr", "TR"))
+private val DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("d MMMM EEEE", Locale.forLanguageTag("tr-TR"))
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -197,7 +197,7 @@ private fun StandardModeContent(
                 formattedCountdown = countdown?.formattedCountdown ?: "--:--:--",
                 progress = countdown?.progress ?: 0f,
                 dateText = DATE_FORMATTER.format(times.date)
-                    .replaceFirstChar { it.titlecase(Locale("tr", "TR")) },
+                    .replaceFirstChar { it.titlecase(Locale.forLanguageTag("tr-TR")) },
                 keraha = state.keraha,
                 scale = scale,
                 countdownTag = "standard_countdown_text",
@@ -356,7 +356,7 @@ private fun CountdownHero(
             )
             Spacer(modifier = Modifier.width(8.dp))
             // Kerahat chip yalnızca kerahat vaktinde görünür
-            if (isKeraha && keraha != null) {
+            if (isKeraha) {
                 Row(
                     modifier = Modifier
                         .testTag("kerahat_badge")
@@ -473,9 +473,9 @@ private fun SimpleModeContent(
                 color = Color.White,
                 modifier = Modifier.testTag("simple_countdown_text")
             )
-            if (state.keraha?.isKeraha == true) {
+            state.keraha?.takeIf { it.isKeraha }?.let { keraha ->
                 Spacer(modifier = Modifier.height(8.dp))
-                SimpleKerahaChip(keraha = state.keraha!!, scale = scale)
+                SimpleKerahaChip(keraha = keraha, scale = scale)
             }
         }
 

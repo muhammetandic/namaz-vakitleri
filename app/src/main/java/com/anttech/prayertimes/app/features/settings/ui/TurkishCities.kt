@@ -92,9 +92,9 @@ val TURKISH_CITIES_WITH_DISTRICTS: List<CityWithDistricts> = listOf(
 )
 
 fun filterCities(query: String): List<String> {
-    val normalized = query.trim().lowercase(Locale("tr", "TR"))
+    val normalized = query.trim().lowercase(Locale.forLanguageTag("tr-TR"))
     if (normalized.isEmpty()) return TURKISH_CITIES_WITH_DISTRICTS.map { it.city }
     return TURKISH_CITIES_WITH_DISTRICTS
-        .filter { it.city.lowercase(Locale("tr", "TR")).contains(normalized) }
+        .filter { it.city.lowercase(Locale.forLanguageTag("tr-TR")).contains(normalized) }
         .map { it.city }
 }
