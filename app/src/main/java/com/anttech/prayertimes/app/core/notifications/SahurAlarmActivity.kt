@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.view.Gravity
+import android.view.KeyEvent
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.LinearLayout
@@ -12,6 +13,11 @@ import androidx.activity.ComponentActivity
 
 /** Full-screen sahur alarm controls, shown above the lock screen. */
 class SahurAlarmActivity : ComponentActivity() {
+
+    private var alarmId: Int = -1
+    private var alarmTitle: String = "Sahur Uyandırma"
+    private var alarmMessage: String = "İmsak vakti yaklaştı"
+    private var originalTrigger: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,11 +32,11 @@ class SahurAlarmActivity : ComponentActivity() {
             )
         }
 
-        val alarmId = intent.getIntExtra(SahurAlarmActionReceiver.EXTRA_ALARM_ID, -1)
-        val title = intent.getStringExtra(SahurAlarmActionReceiver.EXTRA_TITLE) ?: "Sahur Uyandırma"
-        val message = intent.getStringExtra(SahurAlarmActionReceiver.EXTRA_MESSAGE)
+        alarmId = intent.getIntExtra(SahurAlarmActionReceiver.EXTRA_ALARM_ID, -1)
+        alarmTitle = intent.getStringExtra(SahurAlarmActionReceiver.EXTRA_TITLE) ?: "Sahur Uyandırma"
+        alarmMessage = intent.getStringExtra(SahurAlarmActionReceiver.EXTRA_MESSAGE)
             ?: "İmsak vakti yaklaştı"
-        val originalTrigger = intent.getStringExtra(SahurAlarmActionReceiver.EXTRA_ORIGINAL_TRIGGER)
+        originalTrigger = intent.getStringExtra(SahurAlarmActionReceiver.EXTRA_ORIGINAL_TRIGGER)
 
         val content = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -39,25 +45,33 @@ class SahurAlarmActivity : ComponentActivity() {
             setBackgroundColor(0xFF2B1A13.toInt())
         }
         content.addView(TextView(this).apply {
-            text = title
+            text = alarmTitle
             textSize = 30f
             setTextColor(0xFFFFFFFF.toInt())
             gravity = Gravity.CENTER
         })
         content.addView(TextView(this).apply {
-            text = message
+            text = alarmMessage
             textSize = 20f
             setTextColor(0xFFE8D8CE.toInt())
             gravity = Gravity.CENTER
             setPadding(0, 24, 0, 40)
         })
         content.addView(actionButton("5 dk Ertele") {
-            sendAlarmAction(SahurAlarmActionReceiver.ACTION_SNOOZE, alarmId, title, message, originalTrigger)
+            sendAlarmAction(SahurAlarmActionReceiver.ACTION_SNOOZE, alarmId, alarmTitle, alarmMessage, originalTrigger)
         })
         content.addView(actionButton("Durdur") {
-            sendAlarmAction(SahurAlarmActionReceiver.ACTION_STOP, alarmId, title, message, originalTrigger)
+            sendAlarmAction(SahurAlarmActionReceiver.ACTION_STOP, alarmId, alarmTitle, alarmMessage, originalTrigger)
         })
         setContentView(content)
+    }
+
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN || keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
+            sendAlarmAction(SahurAlarmActionReceiver.ACTION_STOP, alarmId, alarmTitle, alarmMessage, originalTrigger)
+            return true
+        }
+        return super.onKeyDown(keyCode, event)
     }
 
     private fun actionButton(label: String, onClick: () -> Unit) = Button(this).apply {

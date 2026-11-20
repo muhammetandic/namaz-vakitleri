@@ -4,12 +4,15 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.net.Uri
 import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
@@ -32,6 +35,7 @@ class AdhanPlaybackService : Service() {
 
     private var player: ExoPlayer? = null
     private var playbackIntent: Intent? = null
+    private var volumeChangeReceiver: BroadcastReceiver? = null
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -101,12 +105,49 @@ class AdhanPlaybackService : Service() {
         newPlayer.setMediaItem(MediaItem.fromUri(Uri.parse(uriString)))
         newPlayer.prepare()
         newPlayer.play()
+        registerVolumeChangeReceiver()
     }
 
     private fun stopPlayback() {
+        unregisterVolumeChangeReceiver()
         player?.stop()
         player?.release()
         player = null
+    }
+
+    private fun registerVolumeChangeReceiver() {
+        if (volumeChangeReceiver != null) return
+        val receiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                if (intent?.action == "android.media.VOLUME_CHANGED_ACTION") {
+                    val prevVolume = intent.getIntExtra("android.media.EXTRA_PREV_VOLUME_STREAM_VALUE", -1)
+                    val newVolume = intent.getIntExtra("android.media.EXTRA_VOLUME_STREAM_VALUE", -1)
+                    if (prevVolume != -1 && newVolume != -1 && prevVolume != newVolume) {
+                        stopPlayback()
+                        stopSelf()
+                    }
+                }
+            }
+        }
+        val filter = IntentFilter("android.media.VOLUME_CHANGED_ACTION")
+        try {
+            ContextCompat.registerReceiver(
+                this,
+                receiver,
+                filter,
+                ContextCompat.RECEIVER_EXPORTED
+            )
+            volumeChangeReceiver = receiver
+        } catch (_: Exception) {}
+    }
+
+    private fun unregisterVolumeChangeReceiver() {
+        volumeChangeReceiver?.let {
+            try {
+                unregisterReceiver(it)
+            } catch (_: Exception) {}
+            volumeChangeReceiver = null
+        }
     }
 
     private fun buildNotification(title: String): android.app.Notification {

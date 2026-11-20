@@ -140,4 +140,20 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    override fun onKeyDown(keyCode: Int, event: android.view.KeyEvent?): Boolean {
+        if (keyCode == android.view.KeyEvent.KEYCODE_VOLUME_DOWN || keyCode == android.view.KeyEvent.KEYCODE_VOLUME_UP) {
+            // Ses önizlemesi çalıyorsa durdur
+            if (soundSettingsViewModel.uiState.value.currentlyPlayingSoundId != null) {
+                soundSettingsViewModel.sendIntent(com.anttech.prayertimes.features.settings.ui.SoundSettingsIntent.StopPreview)
+                return true
+            }
+            // Arka planda ezan çalıyorsa durdur
+            val stopIntent = android.content.Intent(this, com.anttech.prayertimes.core.notifications.AdhanPlaybackService::class.java).apply {
+                action = com.anttech.prayertimes.core.notifications.AdhanPlaybackService.ACTION_STOP
+            }
+            startService(stopIntent)
+        }
+        return super.onKeyDown(keyCode, event)
+    }
 }
