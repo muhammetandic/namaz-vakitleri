@@ -75,6 +75,9 @@ class MainActivity : ComponentActivity() {
             navigationBarStyle = barStyle
         )
 
+        // Ses butonları alarm sesini yönetsin (ezan ve önizlemelerle senkron)
+        volumeControlStream = android.media.AudioManager.STREAM_ALARM
+
         // Akıllı aylık senkronizasyon: günlük WorkManager kontrolü planla
         smartSyncScheduler.scheduleDailyCheck()
 

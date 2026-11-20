@@ -43,6 +43,7 @@ class QiblaViewModelTest {
         val lat = 41.0082
         val lng = 28.9784
         val azimuthFlow = flowOf(0f, 90f, 151.7f)
+        every { compassSensorManager.isSensorAvailable() } returns true
         every { compassSensorManager.getAzimuthFlow() } returns azimuthFlow
 
         val viewModel = QiblaViewModel(
@@ -72,6 +73,7 @@ class QiblaViewModelTest {
         val lat = 41.0082
         val lng = 28.9784
         // Exactly aligned azimuth
+        every { compassSensorManager.isSensorAvailable() } returns true
         every { compassSensorManager.getAzimuthFlow() } returns flowOf(151.7f)
 
         val viewModel = QiblaViewModel(
@@ -92,6 +94,7 @@ class QiblaViewModelTest {
     fun `when StopCompass intent is sent, azimuth flow collection is cancelled`() = runTest {
         val azimuthUpdates = MutableStateFlow(0f)
         var collecting = false
+        every { compassSensorManager.isSensorAvailable() } returns true
         every { compassSensorManager.getAzimuthFlow() } returns flow {
             collecting = true
             try {
@@ -113,5 +116,31 @@ class QiblaViewModelTest {
         viewModel.sendIntent(QiblaIntent.StopCompass)
         testDispatcher.scheduler.advanceUntilIdle()
         assertThat(collecting).isFalse()
+    }
+
+    @Test
+    fun `when compass sensor is not available, isSensorAvailable is false and static bearing is shown`() = runTest {
+        val lat = 41.0082
+        val lng = 28.9784
+        every { compassSensorManager.isSensorAvailable() } returns false
+
+        val viewModel = QiblaViewModel(
+            compassSensorManager = compassSensorManager,
+            calculateQiblaAngleUseCase = calculateQiblaAngleUseCase
+        )
+
+        viewModel.uiState.test {
+            val initial = awaitItem()
+            assertThat(initial.isLoading).isTrue()
+
+            viewModel.sendIntent(QiblaIntent.StartCompass(lat, lng, "İstanbul"))
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            val state = expectMostRecentItem()
+            assertThat(state.isLoading).isFalse()
+            assertThat(state.isSensorAvailable).isFalse()
+            assertThat(state.qiblaBearing).isWithin(1.5f).of(151.7f)
+            assertThat(state.needleAngle).isEqualTo(state.qiblaBearing)
+        }
     }
 }

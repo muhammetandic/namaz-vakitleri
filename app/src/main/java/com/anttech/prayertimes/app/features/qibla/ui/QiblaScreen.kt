@@ -17,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Navigation
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -133,7 +134,44 @@ fun QiblaScreen(
                 label = "RingColor"
             )
 
-            if (state.isAligned) {
+            if (!state.isSensorAvailable) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("qibla_no_sensor_warning"),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.85f),
+                        contentColor = MaterialTheme.colorScheme.onErrorContainer
+                    ),
+                    shape = RoundedCornerShape(14.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Warning,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(28.dp)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column {
+                            Text(
+                                text = "Manyetik Pusula Sensörü Yok",
+                                fontSize = (15 * fontScale).sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "Cihazınızda pusula (manyetometre) sensörü bulunmadığı için canlı ibre dönemiyor. Kıble yönü olarak yukarıdaki ${state.qiblaBearing.roundToInt()}° açısını kullanabilirsiniz.",
+                                fontSize = (12.5f * fontScale).sp,
+                                lineHeight = 17.sp
+                            )
+                        }
+                    }
+                }
+            } else if (state.isAligned) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.testTag("qibla_aligned_indicator")
@@ -213,7 +251,11 @@ fun QiblaScreen(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Pusula sapması durumunda telefonunuzu havada 8 şeklinde hareket ettiriniz.",
+                    text = if (state.isSensorAvailable) {
+                        "Pusula sapması durumunda telefonunuzu havada 8 şeklinde hareket ettiriniz."
+                    } else {
+                        "Harita veya analog pusulada Kuzey (0°) yönünü bulunuz, telefonu ${state.qiblaBearing.roundToInt()}° açısına çeviriniz."
+                    },
                     fontSize = (12 * fontScale).sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

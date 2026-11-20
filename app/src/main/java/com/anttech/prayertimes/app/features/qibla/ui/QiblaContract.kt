@@ -9,6 +9,7 @@ data class QiblaUiState(
     val currentAzimuth: Float = 0f,
     val needleAngle: Float = 0f,
     val isAligned: Boolean = false,
+    val isSensorAvailable: Boolean = true,
     val errorMessage: String? = null
 )
 

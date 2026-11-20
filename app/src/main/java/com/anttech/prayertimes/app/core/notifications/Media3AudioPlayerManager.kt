@@ -2,6 +2,8 @@ package com.anttech.prayertimes.core.notifications
 
 import android.content.Context
 import android.net.Uri
+import androidx.media3.common.AudioAttributes
+import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
@@ -43,7 +45,15 @@ class Media3AudioPlayerManager(
             }
         }
 
-        val player = ExoPlayer.Builder(context).build()
+        val player = ExoPlayer.Builder(context)
+            .setAudioAttributes(
+                AudioAttributes.Builder()
+                    .setUsage(C.USAGE_ALARM)
+                    .setContentType(C.AUDIO_CONTENT_TYPE_SONIFICATION)
+                    .build(),
+                /* handleAudioFocus = */ false
+            )
+            .build()
         exoPlayer = player
         this.onFinished = onFinished
         player.volume = perceptualVolume(volume)

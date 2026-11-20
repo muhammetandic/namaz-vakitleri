@@ -44,15 +44,22 @@ class QiblaViewModel @Inject constructor(
 
     private fun startCompass(latitude: Double, longitude: Double, cityName: String) {
         val qiblaBearing = calculateQiblaAngleUseCase.calculateQiblaBearing(latitude, longitude)
+        val sensorAvailable = compassSensorManager.isSensorAvailable()
+        val needleAngle = if (!sensorAvailable) qiblaBearing else calculateQiblaAngleUseCase.calculateNeedleAngle(qiblaBearing, 0f)
+
         _uiState.update {
             it.copy(
                 isLoading = false,
                 userLatitude = latitude,
                 userLongitude = longitude,
                 cityName = cityName,
-                qiblaBearing = qiblaBearing
+                qiblaBearing = qiblaBearing,
+                needleAngle = needleAngle,
+                isSensorAvailable = sensorAvailable
             )
         }
+
+        if (!sensorAvailable) return
 
         sensorJob?.cancel()
         sensorJob = viewModelScope.launch(dispatcher) {
