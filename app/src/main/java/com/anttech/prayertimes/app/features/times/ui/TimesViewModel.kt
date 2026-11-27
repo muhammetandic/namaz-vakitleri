@@ -7,6 +7,8 @@ import com.anttech.prayertimes.core.location.GeocoderHelper
 import com.anttech.prayertimes.core.location.LocationTracker
 import com.anttech.prayertimes.core.location.SelectedCityStore
 import com.anttech.prayertimes.core.notifications.PrayerAlarmScheduler
+import com.anttech.prayertimes.core.ui.AppUiEffect
+import com.anttech.prayertimes.core.ui.UiEffectsCoordinator
 import com.anttech.prayertimes.features.times.domain.CalculateKerahaStatusUseCase
 import com.anttech.prayertimes.features.times.domain.CalculateNextPrayerUseCase
 import com.anttech.prayertimes.features.times.domain.PrayerTimes
@@ -41,7 +43,8 @@ class TimesViewModel @Inject constructor(
     private val geocoderHelper: GeocoderHelper,
     private val widgetUpdater: WidgetUpdater,
     private val displayPreferences: DisplayPreferencesRepository,
-    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
+    private val uiEffects: UiEffectsCoordinator = UiEffectsCoordinator()
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(TimesUiState())
@@ -50,7 +53,17 @@ class TimesViewModel @Inject constructor(
     private val _effect = Channel<TimesUiEffect>(Channel.BUFFERED)
     val effect = _effect.receiveAsFlow()
 
+    private fun sendEffect(effect: TimesUiEffect) {
+        _effect.trySend(effect)
+        uiEffects.emit(
+            when (effect) {
+                is TimesUiEffect.ShowToast -> AppUiEffect.Toast(effect.message)
+            }
+        )
+    }
+
     private var loadJob: Job? = null
+    private var initialRefreshDone: Boolean = false
 
     init {
         // Görünüm tercihleri kalıcıdır; ilk değer olarak yayınlanır.
@@ -120,6 +133,13 @@ class TimesViewModel @Inject constructor(
         }
     }
 
+    /** İlk açılışta bir kez çözülür; sekme değişimi GPS/senkronizasyonu tekrarlatmaz. */
+    fun refreshLocationOnce() {
+        if (initialRefreshDone) return
+        initialRefreshDone = true
+        refreshLocation()
+    }
+
     private fun refreshLocation() {
         loadJob?.cancel()
         loadJob = viewModelScope.launch {
@@ -145,7 +165,7 @@ class TimesViewModel @Inject constructor(
                 }
                 loadPrayerTimesInternal(location.displayName)
             } else {
-                _effect.send(TimesUiEffect.ShowToast("Konum alınamadı. Varsayılan şehir kullanılıyor."))
+                sendEffect(TimesUiEffect.ShowToast("Konum alınamadı. Varsayılan şehir kullanılıyor."))
                 if (_uiState.value.prayerTimes == null) {
                     loadPrayerTimesInternal(DEFAULT_CITY)
                 }

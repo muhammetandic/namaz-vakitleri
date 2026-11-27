@@ -71,7 +71,7 @@ fun ImsakiyeScreen(
             else -> ErrorContent(
                 message = "İmsakiye verisi yüklenemedi",
                 scale = scale,
-                onRetry = { onIntent(ImsakiyeIntent.LoadImsakiye(state.city, state.yearMonth)) },
+                onRetry = { onIntent(ImsakiyeIntent.LoadImsakiye(state.city, state.yearMonth, force = true)) },
                 modifier = Modifier.padding(innerPadding)
             )
         }
@@ -100,7 +100,7 @@ fun ImsakiyeScreen(
                             )
                         }
                         IconButton(
-                            onClick = { onIntent(ImsakiyeIntent.LoadImsakiye(state.city, state.yearMonth)) },
+                            onClick = { onIntent(ImsakiyeIntent.LoadImsakiye(state.city, state.yearMonth, force = true)) },
                             modifier = Modifier.testTag("refresh_imsakiye_button")
                         ) {
                             Icon(

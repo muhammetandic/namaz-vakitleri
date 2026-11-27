@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.anttech.prayertimes.core.notifications.PrayerAlarmScheduler
 import com.anttech.prayertimes.core.notifications.TestNotificationSender
+import com.anttech.prayertimes.core.ui.AppUiEffect
+import com.anttech.prayertimes.core.ui.UiEffectsCoordinator
 import com.anttech.prayertimes.features.settings.domain.NotificationPreferencesRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
@@ -21,7 +23,8 @@ import javax.inject.Inject
 class NotificationSettingsViewModel @Inject constructor(
     private val preferences: NotificationPreferencesRepository,
     private val prayerAlarmScheduler: PrayerAlarmScheduler,
-    private val testNotificationSender: TestNotificationSender
+    private val testNotificationSender: TestNotificationSender,
+    private val uiEffects: UiEffectsCoordinator = UiEffectsCoordinator()
 ) : ViewModel() {
 
     private val dispatcher: CoroutineDispatcher = Dispatchers.Main
@@ -31,6 +34,15 @@ class NotificationSettingsViewModel @Inject constructor(
 
     private val _effect = Channel<NotificationSettingsUiEffect>(Channel.BUFFERED)
     val effect = _effect.receiveAsFlow()
+
+    private fun sendEffect(effect: NotificationSettingsUiEffect) {
+        _effect.trySend(effect)
+        uiEffects.emit(
+            when (effect) {
+                is NotificationSettingsUiEffect.ShowToast -> AppUiEffect.Toast(effect.message)
+            }
+        )
+    }
 
     init {
         viewModelScope.launch(dispatcher) {
@@ -61,7 +73,7 @@ class NotificationSettingsViewModel @Inject constructor(
             // Kapatınca da açınca da yeniden değerlendir: bildirim kapalı ama
             // ana ekranda widget varsa alarmlar widget tazelemesi için kalır.
             prayerAlarmScheduler.rescheduleSaved()
-            _effect.send(
+            sendEffect(
                 NotificationSettingsUiEffect.ShowToast(
                     if (enabled) "Vakit bildirimleri açıldı" else "Vakit bildirimleri kapatıldı"
                 )
@@ -81,9 +93,9 @@ class NotificationSettingsViewModel @Inject constructor(
         viewModelScope.launch(dispatcher) {
             if (testNotificationSender.isAvailable) {
                 testNotificationSender.send()
-                _effect.send(NotificationSettingsUiEffect.ShowToast("Test bildirimi gönderildi"))
+                sendEffect(NotificationSettingsUiEffect.ShowToast("Test bildirimi gönderildi"))
             } else {
-                _effect.send(
+                sendEffect(
                     NotificationSettingsUiEffect.ShowToast(
                         "Test bildirimi yalnızca geliştirici derlemesinde kullanılabilir"
                     )

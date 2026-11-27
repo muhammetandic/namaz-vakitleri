@@ -5,6 +5,8 @@ import com.google.common.truth.Truth.assertThat
 import com.anttech.prayertimes.core.location.GeocoderHelper
 import com.anttech.prayertimes.core.location.SelectedCityStore
 import com.anttech.prayertimes.core.notifications.PrayerAlarmScheduler
+import com.anttech.prayertimes.core.ui.AppUiEffect
+import com.anttech.prayertimes.core.ui.UiEffectsCoordinator
 import com.anttech.prayertimes.features.settings.domain.DisplayPreferencesRepository
 import com.anttech.prayertimes.features.times.domain.CalculateKerahaStatusUseCase
 import com.anttech.prayertimes.features.times.domain.CalculateNextPrayerUseCase
@@ -396,4 +398,36 @@ class TimesViewModelTest {
             assertThat(state.longitude).isEqualTo(30.7)
         }
     }
+
+    @Test
+    fun `location failure forwards toast to the shared effect coordinator`() = runTest {
+        coEvery { selectedCityStore.getCity() } returns null
+        coEvery { locationTracker.getCurrentLocation() } returns null
+        coEvery { repository.getPrayerTimesForDate(any(), any()) } returns flowOf(samplePrayerTimes)
+        val coordinator = UiEffectsCoordinator()
+        val viewModel = TimesViewModel(
+            repository = repository,
+            calculateNextPrayerUseCase = calculateNextPrayerUseCase,
+            calculateKerahaStatusUseCase = calculateKerahaStatusUseCase,
+            locationTracker = locationTracker,
+            prayerAlarmScheduler = prayerAlarmScheduler,
+            selectedCityStore = selectedCityStore,
+            geocoderHelper = geocoderHelper,
+            widgetUpdater = widgetUpdater,
+            displayPreferences = displayPreferences,
+            ioDispatcher = testDispatcher,
+            uiEffects = coordinator
+        )
+
+        coordinator.effects.test {
+            viewModel.sendIntent(TimesIntent.RefreshLocation)
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            assertThat(awaitItem()).isEqualTo(
+                AppUiEffect.Toast("Konum alınamadı. Varsayılan şehir kullanılıyor.")
+            )
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
 }

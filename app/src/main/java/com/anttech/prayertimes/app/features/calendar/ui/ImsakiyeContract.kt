@@ -18,7 +18,11 @@ data class ImsakiyeUiState(
 )
 
 sealed interface ImsakiyeIntent {
-    data class LoadImsakiye(val city: String, val yearMonth: String) : ImsakiyeIntent
+    data class LoadImsakiye(
+        val city: String,
+        val yearMonth: String,
+        val force: Boolean = false
+    ) : ImsakiyeIntent
     data class ToggleFastedDay(
         val date: LocalDate,
         val hijriDay: Int,

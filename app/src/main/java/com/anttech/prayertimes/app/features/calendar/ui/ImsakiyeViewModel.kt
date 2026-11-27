@@ -2,6 +2,8 @@ package com.anttech.prayertimes.features.calendar.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.anttech.prayertimes.core.ui.AppUiEffect
+import com.anttech.prayertimes.core.ui.UiEffectsCoordinator
 import com.anttech.prayertimes.features.calendar.domain.FastTrackingDay
 import com.anttech.prayertimes.features.calendar.domain.FastTrackingRepository
 import com.anttech.prayertimes.features.calendar.domain.ImsakiyeDay
@@ -27,7 +29,8 @@ import javax.inject.Inject
 @HiltViewModel
 class ImsakiyeViewModel @Inject constructor(
     private val repository: TimesRepository,
-    private val fastTrackingRepository: FastTrackingRepository
+    private val fastTrackingRepository: FastTrackingRepository,
+    private val uiEffects: UiEffectsCoordinator = UiEffectsCoordinator()
 ) : ViewModel() {
 
     private val dispatcher: CoroutineDispatcher = Dispatchers.Main
@@ -38,12 +41,21 @@ class ImsakiyeViewModel @Inject constructor(
     private val _effect = Channel<ImsakiyeUiEffect>(Channel.BUFFERED)
     val effect = _effect.receiveAsFlow()
 
+    private fun sendEffect(effect: ImsakiyeUiEffect) {
+        _effect.trySend(effect)
+        val appEffect = when (effect) {
+            is ImsakiyeUiEffect.ShowMessage -> AppUiEffect.Toast(effect.message)
+            is ImsakiyeUiEffect.ShareText -> AppUiEffect.ShareText(effect.content)
+        }
+        uiEffects.emit(appEffect)
+    }
+
     private var loadJob: Job? = null
     private var trackingJob: Job? = null
 
     fun sendIntent(intent: ImsakiyeIntent) {
         when (intent) {
-            is ImsakiyeIntent.LoadImsakiye -> loadImsakiye(intent.city, intent.yearMonth)
+            is ImsakiyeIntent.LoadImsakiye -> loadImsakiye(intent.city, intent.yearMonth, intent.force)
             is ImsakiyeIntent.ToggleFastedDay -> toggleFastedDay(
                 intent.date,
                 intent.hijriDay,
@@ -55,7 +67,12 @@ class ImsakiyeViewModel @Inject constructor(
         }
     }
 
-    private fun loadImsakiye(city: String, yearMonth: String) {
+    private var lastLoadedKey: Pair<String, String>? = null
+
+    private fun loadImsakiye(city: String, yearMonth: String, force: Boolean = false) {
+        val key = city to yearMonth
+        if (!force && lastLoadedKey == key) return
+        lastLoadedKey = key
         loadJob?.cancel()
         _uiState.value = _uiState.value.copy(isLoading = true, city = city, yearMonth = yearMonth)
 
@@ -153,7 +170,7 @@ class ImsakiyeViewModel @Inject constructor(
                 if (newMarked) "Nafile oruç işaretlendi" else "Nafile oruç işareti kaldırıldı"
             }
 
-            _effect.send(ImsakiyeUiEffect.ShowMessage(actionText))
+            sendEffect(ImsakiyeUiEffect.ShowMessage(actionText))
 
             // Refresh the tracking card data (Room flow also refreshes todayImsakiye.isFasted)
             loadFastingTrackingData()
@@ -175,7 +192,7 @@ class ImsakiyeViewModel @Inject constructor(
         }
 
         viewModelScope.launch(dispatcher) {
-            _effect.send(ImsakiyeUiEffect.ShareText(text))
+            sendEffect(ImsakiyeUiEffect.ShareText(text))
         }
     }
 }

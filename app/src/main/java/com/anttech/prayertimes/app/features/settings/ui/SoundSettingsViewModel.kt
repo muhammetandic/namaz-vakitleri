@@ -3,6 +3,9 @@ package com.anttech.prayertimes.features.settings.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.anttech.prayertimes.core.notifications.PrayerAlarmScheduler
+import com.anttech.prayertimes.core.ui.AppUiCommand
+import com.anttech.prayertimes.core.ui.AppUiEffect
+import com.anttech.prayertimes.core.ui.UiEffectsCoordinator
 import com.anttech.prayertimes.core.notifications.TestNotificationSender
 import com.anttech.prayertimes.features.settings.domain.AudioPlayerManager
 import com.anttech.prayertimes.features.settings.domain.FastingAlarmPreferencesRepository
@@ -15,6 +18,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
@@ -27,7 +31,8 @@ class SoundSettingsViewModel @Inject constructor(
     private val fastingAlarmPreferences: FastingAlarmPreferencesRepository,
     private val alarmScheduler: PrayerAlarmScheduler,
     private val audioPlayerManager: AudioPlayerManager,
-    private val testNotificationSender: TestNotificationSender
+    private val testNotificationSender: TestNotificationSender,
+    private val uiEffects: UiEffectsCoordinator = UiEffectsCoordinator()
 ) : ViewModel() {
 
     private val dispatcher: CoroutineDispatcher = Dispatchers.Main
@@ -38,12 +43,26 @@ class SoundSettingsViewModel @Inject constructor(
     private val _effect = Channel<SoundSettingsUiEffect>(Channel.BUFFERED)
     val effect = _effect.receiveAsFlow()
 
+    private fun sendEffect(effect: SoundSettingsUiEffect) {
+        _effect.trySend(effect)
+        uiEffects.emit(
+            when (effect) {
+                is SoundSettingsUiEffect.ShowToast -> AppUiEffect.Toast(effect.message)
+            }
+        )
+    }
+
     init {
         loadSoundsForPrayers()
         loadDelaysForPrayers()
         loadGlobalVolume()
         loadSahurAlarmPreferences()
         loadSahurAlarmSound()
+        viewModelScope.launch {
+            uiEffects.commands.filterIsInstance<AppUiCommand.StopPreview>().collect {
+                stopPreview()
+            }
+        }
     }
 
     private fun loadSahurAlarmPreferences() {
@@ -143,7 +162,7 @@ class SoundSettingsViewModel @Inject constructor(
             fastingAlarmPreferences.setSahurAlarmEnabled(enabled)
             // Alarmları yeni tercihe göre yeniden kur.
             alarmScheduler.rescheduleSaved()
-            _effect.send(
+            sendEffect(
                 SoundSettingsUiEffect.ShowToast(
                     if (enabled) {
                         "Sahur uyandırma alarmı açıldı"
@@ -214,6 +233,7 @@ class SoundSettingsViewModel @Inject constructor(
                 currentlyPlayingTargetId = targetId
             )
         }
+        uiEffects.setPreviewActive(true)
         audioPlayerManager.play(soundOption, _uiState.value.globalVolume) {
             // Çalma kendiliğinden bitince buton yeniden "oynat" simgesine döner.
             viewModelScope.launch(dispatcher) { clearNowPlaying(targetId) }
@@ -221,16 +241,15 @@ class SoundSettingsViewModel @Inject constructor(
     }
 
     private fun clearNowPlaying(targetId: String) {
-        _uiState.update { current ->
-            if (current.currentlyPlayingTargetId != targetId) {
-                current
-            } else {
-                current.copy(currentlyPlayingSoundId = null, currentlyPlayingTargetId = null)
-            }
+        if (_uiState.value.currentlyPlayingTargetId != targetId) return
+        uiEffects.setPreviewActive(false)
+        _uiState.update {
+            it.copy(currentlyPlayingSoundId = null, currentlyPlayingTargetId = null)
         }
     }
 
     private fun stopPreview() {
+        uiEffects.setPreviewActive(false)
         audioPlayerManager.stop()
         _uiState.update {
             it.copy(currentlyPlayingSoundId = null, currentlyPlayingTargetId = null)
@@ -255,6 +274,7 @@ class SoundSettingsViewModel @Inject constructor(
     }
 
     override fun onCleared() {
+        uiEffects.setPreviewActive(false)
         audioPlayerManager.stop()
     }
 }
