@@ -13,15 +13,21 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestCoroutineScheduler
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class LocationTrackerTest {
 
     private val context: Context = mockk(relaxed = true)
     private val fusedLocationClient: FusedLocationProviderClient = mockk(relaxed = true)
     private val geocoderHelper: GeocoderHelper = mockk()
+    private val testScheduler = TestCoroutineScheduler()
+    private val testDispatcher = UnconfinedTestDispatcher(testScheduler)
     private lateinit var locationTracker: DefaultLocationTracker
 
     @Before
@@ -30,12 +36,13 @@ class LocationTrackerTest {
         locationTracker = DefaultLocationTracker(
             context = context,
             fusedLocationProviderClient = fusedLocationClient,
-            geocoderHelper = geocoderHelper
+            geocoderHelper = geocoderHelper,
+            ioDispatcher = testDispatcher
         )
     }
 
     @Test
-    fun `getCurrentLocation returns UserLocation with city name when fused location succeeds`() = runTest {
+    fun `getCurrentLocation returns UserLocation with city name when fused location succeeds`() = runTest(testScheduler) {
         val mockLocation = mockk<Location> {
             every { latitude } returns 41.0082
             every { longitude } returns 28.9784
@@ -66,7 +73,7 @@ class LocationTrackerTest {
     }
 
     @Test
-    fun `getCurrentLocation ignores stale cached location and uses fresh fix`() = runTest {
+    fun `getCurrentLocation ignores stale cached location and uses fresh fix`() = runTest(testScheduler) {
         val staleLocation = mockk<Location> {
             every { latitude } returns 41.1
             every { longitude } returns 29.1
@@ -111,7 +118,7 @@ class LocationTrackerTest {
     }
 
     @Test
-    fun `getCurrentLocation returns null when fused location task fails`() = runTest {
+    fun `getCurrentLocation returns null when fused location task fails`() = runTest(testScheduler) {
         val task = mockk<Task<Location>>()
         val failureSlot = slot<OnFailureListener>()
 

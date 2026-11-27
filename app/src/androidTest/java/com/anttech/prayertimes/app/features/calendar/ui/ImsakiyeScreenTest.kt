@@ -5,6 +5,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.unit.dp
 import com.anttech.prayertimes.core.ui.theme.NamazVakitleriTheme
 import com.anttech.prayertimes.features.calendar.domain.ImsakiyeDay
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import java.time.LocalDate
@@ -77,12 +78,12 @@ class ImsakiyeScreenTest {
 
         composeTestRule.onNodeWithTag("today_fasted_toggle").assertHasClickAction().performClick()
         val intent = intentFired
-        assert(intent is ImsakiyeIntent.ToggleFastedDay)
-        assert((intent as ImsakiyeIntent.ToggleFastedDay).date == sampleDay.date)
-        assert(intent.hijriDay == 15)
-        assert(intent.hijriMonth == 3)
-        assert(intent.hijriMonthName == "Rebiülevvel")
-        assert(intent.hijriYear == 1448)
+        assertTrue(intent is ImsakiyeIntent.ToggleFastedDay)
+        assertTrue((intent as ImsakiyeIntent.ToggleFastedDay).date == sampleDay.date)
+        assertTrue(intent.hijriDay == 15)
+        assertTrue(intent.hijriMonth == 3)
+        assertTrue(intent.hijriMonthName == "Rebiülevvel")
+        assertTrue(intent.hijriYear == 1448)
     }
 
     @Test
@@ -121,6 +122,6 @@ class ImsakiyeScreenTest {
         }
 
         composeTestRule.onNodeWithTag("share_imsakiye_button").performClick()
-        assert(intentFired is ImsakiyeIntent.ShareTodayImsakiye)
+        assertTrue(intentFired is ImsakiyeIntent.ShareTodayImsakiye)
     }
 }

@@ -34,9 +34,7 @@
         <activity
             android:name="com.anttech.prayertimes.MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.NamazVakitleri"
-            android:showOnLockScreen="true"
-            android:turnScreenOn="true">
+            android:theme="@style/Theme.NamazVakitleri">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -59,29 +57,10 @@
             android:exported="false" />
 
         <!-- Sahur alarmı aksiyon alıcısı (Durdur, 5 dk Ertele) -->
+        <!-- Yalnızca uygulama içi PendingIntent'lerle tetiklenir. -->
         <receiver
             android:name="com.anttech.prayertimes.core.notifications.SahurAlarmActionReceiver"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="com.anttech.prayertimes.action.SAHUR_STOP" />
-                <action android:name="com.anttech.prayertimes.action.SAHUR_SNOOZE" />
-            </intent-filter>
-        </receiver>
-
-        <!-- Sahur test bildirimi tetikleyici (ADB için) -->
-        <receiver
-            android:name="com.anttech.prayertimes.core.notifications.TestSahurTriggerReceiver"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="com.anttech.prayertimes.action.TEST_SAHUR_NOTIFICATION" />
-            </intent-filter>
-        </receiver>
-
-        <!-- Test activity for sahur alarm (ADB launch) -->
-        <activity
-            android:name="com.anttech.prayertimes.core.notifications.TestSahurActivity"
-            android:exported="true"
-            android:excludeFromRecents="true" />
+            android:exported="false" />
 
         <activity
             android:name="com.anttech.prayertimes.core.notifications.SahurAlarmActivity"

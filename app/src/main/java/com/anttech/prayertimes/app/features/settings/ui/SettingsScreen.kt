@@ -18,7 +18,9 @@ import androidx.compose.ui.unit.sp
 fun SettingsScreen(
     modifier: Modifier = Modifier,
     isSimpleMode: Boolean,
+    fontScale: Float = 1.0f,
     onSimpleModeToggle: () -> Unit,
+    onFontScaleChange: (Float) -> Unit = {},
     onBackClick: () -> Unit,
     onSoundSettingsClick: () -> Unit,
     onNotificationsClick: () -> Unit,
@@ -26,7 +28,7 @@ fun SettingsScreen(
     onAboutClick: () -> Unit,
     onPermissionsClick: () -> Unit = {}
 ) {
-    val scale = 1.0f  // Default scale, can be passed from parent
+    val scale = fontScale
 
     Scaffold(
         topBar = {
@@ -68,6 +70,13 @@ fun SettingsScreen(
                         scale = scale,
                         modifier = Modifier.testTag("settings_simple_mode"),
                         onCheckedChange = { onSimpleModeToggle() }
+                    )
+                    SettingsDivider()
+                    SettingsFontScaleRow(
+                        scale = scale,
+                        value = fontScale,
+                        onValueChange = onFontScaleChange,
+                        modifier = Modifier.testTag("settings_font_scale")
                     )
                 }
             }

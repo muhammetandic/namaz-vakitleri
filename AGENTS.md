@@ -12,7 +12,7 @@ Bu dosya, projede çalışan tüm yapay zeka ajanları (agents) ve geliştiricil
 | **Kod Mimarisi** | **Package-by-Feature Clean Architecture** | Tek modül içerisinde özellik odaklı (`feature-first`) paketleme. |
 | **Durum Yönetimi** | **MVI (Model-View-Intent) + UDF** | Tek yönlü veri akışı (`UiState`, `UiIntent`/`UiEvent`, `UiEffect`). |
 | **Geliştirme Metodolojisi** | **Test Driven Development (TDD)** | Önce test yazılır (Red), kod yazılıp test geçirilir (Green), sonra yeniden düzenlenir (Refactor). |
-| **Test Piramidi** | **Unit Tests + Integration Tests + E2E Tests** | Kapsamlı test stratejisi (JUnit 5 / MockK / Turbine / Compose Test Rule / Espresso). |
+| **Test Piramidi** | **Unit Tests + Integration Tests + E2E Tests** | Kapsamlı test stratejisi (JUnit 4 / MockK / Turbine / Compose Test Rule / Espresso). |
 | **Konum & GPS** | **FusedLocationProvider + Reverse Geocoding** | Düşük pil tüketimli one-shot konum tespiti ve Türkiye il/ilçe adı eşleme. |
 | **Akıllı Senkronizasyon** | **WorkManager Günlük Kontrol + Wi-Fi Kuralı** | Ay sonuna 10 gün kala sonraki ay kontrol edilir; indirme yalnızca Wi-Fi'de, ay sonuna ≤2 gün kalınca mobil veriye de izin verilir. Günlük `SmartSyncWorker` (`smart_monthly_sync` işi) uygular; yeni ay indirildiğinde vakit alarmları da yeniden kurulur (`SmartSyncCoordinator`). |
 | **Kıble Pusulası** | **Rotation Vector Sensor + Spherical Trigonometry** | Kabe açısı matematiksel hesabı, canlı pusula ibresi ve titreşimli hizalama geri bildirimi. Kıble sekmesi görünürken sensör açılır, sekme değişince kapatılır. |
@@ -104,7 +104,7 @@ flowchart LR
   - `ViewModel` sınıfları (MVI State akışı, Intent işleme, Effect fırlatma).
   - `Repository` sınıfları (Offline-first mantığı, network fallback).
   - `AudioPlayer` ve `TimeUtils` yardımcı sınıfları.
-- **Araçlar:** JUnit 5, MockK, Kotlinx Coroutines Test, Turbine (Flow doğrulamaları), Truth / AssertJ.
+- **Araçlar:** JUnit 4, MockK, Kotlinx Coroutines Test, Turbine (Flow doğrulamaları), Truth / AssertJ.
 
 ### 3.2. Entegrasyon Testleri (Integration Tests)
 - **Konum:** `app/src/test/java/...` veya `app/src/androidTest/java/...`

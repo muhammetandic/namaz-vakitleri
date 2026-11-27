@@ -24,8 +24,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import java.time.LocalDateTime
 import javax.inject.Inject
+
+private const val RECEIVER_TIMEOUT_MS = 10_000L
 
 /**
  * Vakit alarmı alıcısı.
@@ -61,9 +64,11 @@ class AlarmReceiver : BroadcastReceiver() {
         val appContext = context.applicationContext
         CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
             try {
-                deliverAlert(appContext, intent)
-                // Vakit değişti: ana ekran widget'larını yenile.
-                widgetUpdater.updateAll()
+                withTimeout(RECEIVER_TIMEOUT_MS) {
+                    deliverAlert(appContext, intent)
+                    // Vakit değişti: ana ekran widget'larını yenile.
+                    widgetUpdater.updateAll()
+                }
             } finally {
                 pendingResult.finish()
             }
@@ -288,7 +293,7 @@ class AlarmReceiver : BroadcastReceiver() {
         if (sahurSound != null) {
             // Sahur için özel ses seçilmiş, geçerliliğini kontrol et.
             if (sahurSound is SoundOption.BuiltIn &&
-                context.resources.getIdentifier(sahurSound.resName, "raw", context.packageName) == 0
+                rawSoundResId(sahurSound.resName) == 0
             ) {
                 // Sahur sesi bozuksa imsak sesine düş.
             } else {
@@ -307,11 +312,11 @@ class AlarmReceiver : BroadcastReceiver() {
         // Kayıtlı ses dosyası uygulamada yoksa (ör. eski sürümden kalan tercih)
         // varsayılan ezana düş; o da yoksa sessiz kabul et.
         if (stored is SoundOption.BuiltIn &&
-            context.resources.getIdentifier(stored.resName, "raw", context.packageName) == 0
+            rawSoundResId(stored.resName) == 0
         ) {
             val fallback = prayerType?.let { SoundOption.defaultFor(it) } ?: SoundOption.Silent
             return if (fallback is SoundOption.BuiltIn &&
-                context.resources.getIdentifier(fallback.resName, "raw", context.packageName) == 0
+                rawSoundResId(fallback.resName) == 0
             ) {
                 SoundOption.Silent
             } else {
@@ -353,7 +358,7 @@ class AlarmReceiver : BroadcastReceiver() {
 
     private fun playbackUri(context: Context, sound: SoundOption): String? = when (sound) {
         is SoundOption.BuiltIn -> {
-            val resId = context.resources.getIdentifier(sound.resName, "raw", context.packageName)
+            val resId = rawSoundResId(sound.resName)
             if (resId == 0) null else "android.resource://${context.packageName}/$resId"
         }
         is SoundOption.CustomFile -> sound.uriString

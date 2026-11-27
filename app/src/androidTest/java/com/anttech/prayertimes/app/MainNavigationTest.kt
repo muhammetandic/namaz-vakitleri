@@ -3,7 +3,9 @@ package com.anttech.prayertimes
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.anttech.prayertimes.core.ui.theme.NamazVakitleriTheme
+import com.anttech.prayertimes.features.calendar.ui.ImsakiyeUiState
 import com.anttech.prayertimes.features.settings.domain.SoundOption
+import com.anttech.prayertimes.features.settings.ui.NotificationSettingsUiState
 import com.anttech.prayertimes.features.settings.ui.SoundSettingsUiState
 import com.anttech.prayertimes.features.times.domain.CountdownResult
 import com.anttech.prayertimes.features.times.domain.PrayerTimes
@@ -12,6 +14,8 @@ import com.anttech.prayertimes.features.times.ui.TimesUiState
 import com.anttech.prayertimes.features.qibla.ui.QiblaIntent
 import com.anttech.prayertimes.features.qibla.ui.QiblaUiState
 import com.anttech.prayertimes.features.tracker.ui.TrackerUiState
+import kotlinx.coroutines.flow.MutableStateFlow
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import java.time.LocalDate
@@ -61,14 +65,18 @@ class MainNavigationTest {
         composeTestRule.setContent {
             NamazVakitleriTheme {
                 MainAppScaffold(
-                    timesState = timesState,
+                    timesStateFlow = MutableStateFlow(timesState),
                     onTimesIntent = {},
-                    qiblaState = qiblaState,
+                    imsakiyeStateFlow = MutableStateFlow(ImsakiyeUiState(isLoading = false)),
+                    onImsakiyeIntent = {},
+                    qiblaStateFlow = MutableStateFlow(qiblaState),
                     onQiblaIntent = {},
-                    trackerState = trackerState,
+                    trackerStateFlow = MutableStateFlow(trackerState),
                     onTrackerIntent = {},
-                    soundState = soundState,
-                    onSoundIntent = {}
+                    soundStateFlow = MutableStateFlow(soundState),
+                    onSoundIntent = {},
+                    notificationStateFlow = MutableStateFlow(NotificationSettingsUiState()),
+                    onNotificationIntent = {}
                 )
             }
         }
@@ -114,14 +122,18 @@ class MainNavigationTest {
         composeTestRule.setContent {
             NamazVakitleriTheme {
                 MainAppScaffold(
-                    timesState = timesState,
+                    timesStateFlow = MutableStateFlow(timesState),
                     onTimesIntent = {},
-                    qiblaState = qiblaState,
+                    imsakiyeStateFlow = MutableStateFlow(ImsakiyeUiState(isLoading = false)),
+                    onImsakiyeIntent = {},
+                    qiblaStateFlow = MutableStateFlow(qiblaState),
                     onQiblaIntent = { qiblaIntents.add(it) },
-                    trackerState = trackerState,
+                    trackerStateFlow = MutableStateFlow(trackerState),
                     onTrackerIntent = {},
-                    soundState = soundState,
-                    onSoundIntent = {}
+                    soundStateFlow = MutableStateFlow(soundState),
+                    onSoundIntent = {},
+                    notificationStateFlow = MutableStateFlow(NotificationSettingsUiState()),
+                    onNotificationIntent = {}
                 )
             }
         }
@@ -134,8 +146,9 @@ class MainNavigationTest {
         // Vakitler sekmesine dön: sensör dinleyicisi kapatılmalı (pil kuralı)
         composeTestRule.onNodeWithTag("nav_times").performClick()
         composeTestRule.runOnIdle { }
-        assert(qiblaIntents.any { it is QiblaIntent.StopCompass }) {
-            "Kıble sekmesi terk edilince StopCompass gönderilmeli. Alınan: $qiblaIntents"
-        }
+        assertTrue(
+            "Kıble sekmesi terk edilince StopCompass gönderilmeli. Alınan: $qiblaIntents",
+            qiblaIntents.any { it is QiblaIntent.StopCompass }
+        )
     }
 }

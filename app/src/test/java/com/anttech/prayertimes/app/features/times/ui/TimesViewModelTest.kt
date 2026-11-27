@@ -5,6 +5,7 @@ import com.google.common.truth.Truth.assertThat
 import com.anttech.prayertimes.core.location.GeocoderHelper
 import com.anttech.prayertimes.core.location.SelectedCityStore
 import com.anttech.prayertimes.core.notifications.PrayerAlarmScheduler
+import com.anttech.prayertimes.features.settings.domain.DisplayPreferencesRepository
 import com.anttech.prayertimes.features.times.domain.CalculateKerahaStatusUseCase
 import com.anttech.prayertimes.features.times.domain.CalculateNextPrayerUseCase
 import com.anttech.prayertimes.features.times.domain.PrayerTimes
@@ -39,6 +40,7 @@ class TimesViewModelTest {
     private val selectedCityStore: SelectedCityStore = mockk(relaxed = true)
     private val geocoderHelper: GeocoderHelper = mockk()
     private val widgetUpdater: WidgetUpdater = mockk(relaxed = true)
+    private val displayPreferences: DisplayPreferencesRepository = mockk()
 
     private val samplePrayerTimes = PrayerTimes(
         city = "İstanbul",
@@ -57,6 +59,10 @@ class TimesViewModelTest {
         coEvery { repository.syncMonthlyPrayerTimes(any()) } returns Result.success(Unit)
         coEvery { selectedCityStore.getCity() } returns null
         every { geocoderHelper.getCoordinatesForCity(any(), any()) } returns null
+        every { displayPreferences.fontSizeMultiplier } returns flowOf(1.0f)
+        every { displayPreferences.isSimpleMode } returns flowOf(false)
+        coEvery { displayPreferences.setSimpleMode(any()) } returns Unit
+        coEvery { displayPreferences.setFontSizeMultiplier(any()) } returns Unit
     }
 
     @After
@@ -76,7 +82,9 @@ class TimesViewModelTest {
             prayerAlarmScheduler = prayerAlarmScheduler,
             selectedCityStore = selectedCityStore,
             geocoderHelper = geocoderHelper,
-            widgetUpdater = widgetUpdater
+            widgetUpdater = widgetUpdater,
+            displayPreferences = displayPreferences,
+            ioDispatcher = testDispatcher
         )
 
         viewModel.uiState.test {
@@ -109,7 +117,9 @@ class TimesViewModelTest {
             prayerAlarmScheduler = prayerAlarmScheduler,
             selectedCityStore = selectedCityStore,
             geocoderHelper = geocoderHelper,
-            widgetUpdater = widgetUpdater
+            widgetUpdater = widgetUpdater,
+            displayPreferences = displayPreferences,
+            ioDispatcher = testDispatcher
         )
 
         viewModel.sendIntent(TimesIntent.LoadTimes("İstanbul"))
@@ -130,8 +140,11 @@ class TimesViewModelTest {
             prayerAlarmScheduler = prayerAlarmScheduler,
             selectedCityStore = selectedCityStore,
             geocoderHelper = geocoderHelper,
-            widgetUpdater = widgetUpdater
+            widgetUpdater = widgetUpdater,
+            displayPreferences = displayPreferences,
+            ioDispatcher = testDispatcher
         )
+        testDispatcher.scheduler.advanceUntilIdle()
 
         viewModel.uiState.test {
             awaitItem()
@@ -163,7 +176,9 @@ class TimesViewModelTest {
             prayerAlarmScheduler = prayerAlarmScheduler,
             selectedCityStore = selectedCityStore,
             geocoderHelper = geocoderHelper,
-            widgetUpdater = widgetUpdater
+            widgetUpdater = widgetUpdater,
+            displayPreferences = displayPreferences,
+            ioDispatcher = testDispatcher
         )
 
         viewModel.uiState.test {
@@ -193,7 +208,9 @@ class TimesViewModelTest {
             prayerAlarmScheduler = prayerAlarmScheduler,
             selectedCityStore = selectedCityStore,
             geocoderHelper = geocoderHelper,
-            widgetUpdater = widgetUpdater
+            widgetUpdater = widgetUpdater,
+            displayPreferences = displayPreferences,
+            ioDispatcher = testDispatcher
         )
 
         viewModel.uiState.test {
@@ -222,7 +239,9 @@ class TimesViewModelTest {
             prayerAlarmScheduler = prayerAlarmScheduler,
             selectedCityStore = selectedCityStore,
             geocoderHelper = geocoderHelper,
-            widgetUpdater = widgetUpdater
+            widgetUpdater = widgetUpdater,
+            displayPreferences = displayPreferences,
+            ioDispatcher = testDispatcher
         )
 
         viewModel.uiState.test {
@@ -251,7 +270,9 @@ class TimesViewModelTest {
             prayerAlarmScheduler = prayerAlarmScheduler,
             selectedCityStore = selectedCityStore,
             geocoderHelper = geocoderHelper,
-            widgetUpdater = widgetUpdater
+            widgetUpdater = widgetUpdater,
+            displayPreferences = displayPreferences,
+            ioDispatcher = testDispatcher
         )
 
         viewModel.uiState.test {
@@ -284,7 +305,9 @@ class TimesViewModelTest {
             prayerAlarmScheduler = prayerAlarmScheduler,
             selectedCityStore = selectedCityStore,
             geocoderHelper = geocoderHelper,
-            widgetUpdater = widgetUpdater
+            widgetUpdater = widgetUpdater,
+            displayPreferences = displayPreferences,
+            ioDispatcher = testDispatcher
         )
 
         viewModel.uiState.test {
@@ -316,7 +339,9 @@ class TimesViewModelTest {
             prayerAlarmScheduler = prayerAlarmScheduler,
             selectedCityStore = selectedCityStore,
             geocoderHelper = geocoderHelper,
-            widgetUpdater = widgetUpdater
+            widgetUpdater = widgetUpdater,
+            displayPreferences = displayPreferences,
+            ioDispatcher = testDispatcher
         )
 
         viewModel.uiState.test {
@@ -352,7 +377,9 @@ class TimesViewModelTest {
             prayerAlarmScheduler = prayerAlarmScheduler,
             selectedCityStore = selectedCityStore,
             geocoderHelper = geocoderHelper,
-            widgetUpdater = widgetUpdater
+            widgetUpdater = widgetUpdater,
+            displayPreferences = displayPreferences,
+            ioDispatcher = testDispatcher
         )
 
         viewModel.uiState.test {

@@ -11,5 +11,4 @@ interface FastTrackingRepository {
     fun getForbiddenDays(city: String): Flow<List<FastTrackingDay>>
     fun getNonFastedRamadanDays(city: String): Flow<List<FastTrackingDay>>
     fun getFastedNonRamadanDays(city: String): Flow<List<FastTrackingDay>>
-    suspend fun markForbiddenDays(city: String, year: Int)
 }

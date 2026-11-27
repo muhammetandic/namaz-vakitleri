@@ -1,0 +1,198 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 3,
+    "identityHash": "0211c32ca2636af93faf4664960e51f3",
+    "entities": [
+      {
+        "tableName": "prayer_times",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `city` TEXT NOT NULL, `date` TEXT NOT NULL, `imsak` TEXT NOT NULL, `gunes` TEXT NOT NULL, `ogle` TEXT NOT NULL, `ikindi` TEXT NOT NULL, `aksam` TEXT NOT NULL, `yatsi` TEXT NOT NULL, `tomorrowImsak` TEXT, `hijriDay` INTEGER NOT NULL, `hijriMonth` INTEGER NOT NULL, `hijriMonthName` TEXT NOT NULL, `hijriYear` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "city",
+            "columnName": "city",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "date",
+            "columnName": "date",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "imsak",
+            "columnName": "imsak",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "gunes",
+            "columnName": "gunes",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ogle",
+            "columnName": "ogle",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ikindi",
+            "columnName": "ikindi",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "aksam",
+            "columnName": "aksam",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "yatsi",
+            "columnName": "yatsi",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tomorrowImsak",
+            "columnName": "tomorrowImsak",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "hijriDay",
+            "columnName": "hijriDay",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hijriMonth",
+            "columnName": "hijriMonth",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hijriMonthName",
+            "columnName": "hijriMonthName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hijriYear",
+            "columnName": "hijriYear",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_prayer_times_city_date",
+            "unique": true,
+            "columnNames": [
+              "city",
+              "date"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_prayer_times_city_date` ON `${TABLE_NAME}` (`city`, `date`)"
+          }
+        ]
+      },
+      {
+        "tableName": "fast_tracking",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `city` TEXT NOT NULL, `date` TEXT NOT NULL, `hijriMonth` INTEGER NOT NULL, `hijriDay` INTEGER NOT NULL, `hijriMonthName` TEXT NOT NULL, `hijriYear` INTEGER NOT NULL, `isMarked` INTEGER NOT NULL, `isForbidden` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "city",
+            "columnName": "city",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "date",
+            "columnName": "date",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hijriMonth",
+            "columnName": "hijriMonth",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hijriDay",
+            "columnName": "hijriDay",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hijriMonthName",
+            "columnName": "hijriMonthName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hijriYear",
+            "columnName": "hijriYear",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isMarked",
+            "columnName": "isMarked",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isForbidden",
+            "columnName": "isForbidden",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_fast_tracking_city_date",
+            "unique": true,
+            "columnNames": [
+              "city",
+              "date"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_fast_tracking_city_date` ON `${TABLE_NAME}` (`city`, `date`)"
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '0211c32ca2636af93faf4664960e51f3')"
+    ]
+  }
+}

@@ -3,6 +3,7 @@ package com.anttech.prayertimes.features.tracker.ui
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.anttech.prayertimes.core.ui.theme.NamazVakitleriTheme
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
@@ -61,7 +62,7 @@ class TrackerScreenTest {
         }
 
         composeTestRule.onNodeWithTag("dhikr_tap_area").performClick()
-        assert(intentFired is TrackerIntent.IncrementDhikr)
+        assertTrue(intentFired is TrackerIntent.IncrementDhikr)
     }
 
     @Test
@@ -93,6 +94,6 @@ class TrackerScreenTest {
         }
 
         composeTestRule.onNodeWithTag("dhikr_reset_button").performClick()
-        assert(intentFired is TrackerIntent.ResetDhikr)
+        assertTrue(intentFired is TrackerIntent.ResetDhikr)
     }
 }

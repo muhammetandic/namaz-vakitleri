@@ -181,7 +181,7 @@ class TimesScreenTest {
         }
 
         composeTestRule.onNodeWithTag("toggle_simple_mode_button").performClick()
-        assert(intentFired is TimesIntent.ToggleSimpleMode)
+        assertTrue(intentFired is TimesIntent.ToggleSimpleMode)
     }
 
     @Test
@@ -201,6 +201,6 @@ class TimesScreenTest {
         }
 
         composeTestRule.onNodeWithTag("refresh_location_button").performClick()
-        assert(intentFired is TimesIntent.RefreshLocation)
+        assertTrue(intentFired is TimesIntent.RefreshLocation)
     }
 }

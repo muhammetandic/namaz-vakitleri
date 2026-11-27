@@ -7,6 +7,7 @@ import com.anttech.prayertimes.core.notifications.AlarmScheduler
 import com.anttech.prayertimes.core.notifications.LastCityStore
 import com.anttech.prayertimes.core.notifications.PrayerAlarmScheduler
 import com.anttech.prayertimes.core.notifications.TestNotificationSender
+import com.anttech.prayertimes.features.settings.domain.FastingAlarmPreferencesRepository
 import com.anttech.prayertimes.features.settings.domain.NotificationPreferencesRepository
 import com.anttech.prayertimes.features.times.domain.PrayerTimes
 import com.anttech.prayertimes.features.times.domain.TimesRepository
@@ -69,6 +70,15 @@ class NotificationSettingsViewModelTest {
         override fun getMonthlyPrayerTimes(city: String, yearMonth: String): Flow<List<PrayerTimes>> =
             flowOf(emptyList())
 
+        override suspend fun getPrayerTimesBetween(
+            city: String,
+            start: LocalDate,
+            end: LocalDate
+        ): List<PrayerTimes> = timesByDate
+            .filterKeys { it >= start && it <= end }
+            .values
+            .sortedBy { it.date }
+
         override suspend fun syncMonthlyPrayerTimes(city: String): Result<Unit> =
             Result.success(Unit)
 
@@ -78,6 +88,13 @@ class NotificationSettingsViewModelTest {
         override suspend fun hasMonthlyPrayerTimes(city: String, yearMonth: String): Boolean = false
 
         override suspend fun getCachedCity(): String? = null
+    }
+
+    private object NoOpFastingAlarmPreferences : FastingAlarmPreferencesRepository {
+        override val sahurAlarmEnabled: Flow<Boolean> = flowOf(false)
+        override val sahurAlarmMinutesBefore: Flow<Int> = flowOf(30)
+        override suspend fun setSahurAlarmEnabled(enabled: Boolean) = Unit
+        override suspend fun setSahurAlarmMinutesBefore(minutes: Int) = Unit
     }
 
     private class FakeLastCityStore(var city: String? = "İstanbul") : LastCityStore {
@@ -91,6 +108,7 @@ class NotificationSettingsViewModelTest {
     private class FakeTestNotificationSender : TestNotificationSender {
         var sent = 0
         var sahurSent = 0
+        override val isAvailable: Boolean = true
         override fun send() {
             sent++
         }
@@ -121,7 +139,9 @@ class NotificationSettingsViewModelTest {
         repository = timesRepository,
         alarmScheduler = alarmScheduler,
         lastCityStore = cityStore,
-        notificationPreferences = preferences
+        notificationPreferences = preferences,
+        fastingAlarmPreferences = NoOpFastingAlarmPreferences,
+        hasActiveWidgets = { false }
     )
 
     @Before

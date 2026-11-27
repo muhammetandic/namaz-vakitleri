@@ -9,7 +9,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import javax.inject.Inject
+
+private const val RECEIVER_TIMEOUT_MS = 10_000L
 
 @AndroidEntryPoint
 class BootCompletedReceiver : BroadcastReceiver() {
@@ -31,9 +34,11 @@ class BootCompletedReceiver : BroadcastReceiver() {
         val pendingResult = goAsync()
         CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
             try {
-                prayerAlarmScheduler.rescheduleSaved()
-                // Widget'lar da yeniden başlatma sonrası taze veriyle çizilsin.
-                widgetUpdater.updateAll()
+                withTimeout(RECEIVER_TIMEOUT_MS) {
+                    prayerAlarmScheduler.rescheduleSaved()
+                    // Widget'lar da yeniden başlatma sonrası taze veriyle çizilsin.
+                    widgetUpdater.updateAll()
+                }
             } finally {
                 pendingResult.finish()
             }

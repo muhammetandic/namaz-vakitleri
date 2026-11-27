@@ -27,7 +27,7 @@ data class FastTrackingDay(
             return if (isForbidden) {
                 "$dateStr - Oruç Yasak (${forbiddenReason})"
             } else if (isRamadan) {
-                if (isMarked) "$dateStr - Oruç TUTMADI (kaza)" else "$dateStr - Oruç tutuldu"
+                if (isMarked) "$dateStr - Oruç tutulmadı" else "$dateStr - Oruç tutuldu"
             } else {
                 if (isMarked) "$dateStr - Oruç TUTULDU (nafile)" else "$dateStr"
             }

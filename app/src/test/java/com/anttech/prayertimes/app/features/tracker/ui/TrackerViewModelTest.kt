@@ -43,22 +43,15 @@ class TrackerViewModelTest {
     }
 
     @Test
-    fun `when dhikr reaches target 33, target reached effect is fired and lap count increments`() = runTest {
+    fun `when dhikr reaches target 33, lap count increments and count resets`() = runTest {
         val viewModel = TrackerViewModel()
 
-        viewModel.effect.test {
-            // Repeat 33 times
-            repeat(33) {
-                viewModel.sendIntent(TrackerIntent.IncrementDhikr)
-                testDispatcher.scheduler.advanceUntilIdle()
-            }
-
-            // At 33: TriggerTargetVibration effect should be emitted
-            val effect = expectMostRecentItem()
-            assertThat(effect).isEqualTo(TrackerUiEffect.TriggerTargetVibration)
-            assertThat(viewModel.uiState.value.dhikrCount).isEqualTo(0)
-            assertThat(viewModel.uiState.value.dhikrLaps).isEqualTo(1)
+        repeat(33) {
+            viewModel.sendIntent(TrackerIntent.IncrementDhikr)
         }
+
+        assertThat(viewModel.uiState.value.dhikrCount).isEqualTo(0)
+        assertThat(viewModel.uiState.value.dhikrLaps).isEqualTo(1)
     }
 
     @Test

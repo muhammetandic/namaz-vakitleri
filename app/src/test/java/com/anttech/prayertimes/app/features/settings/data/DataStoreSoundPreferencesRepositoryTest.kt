@@ -30,4 +30,24 @@ class DataStoreSoundPreferencesRepositoryTest {
         assertThat(repository.deserializeSound("VIBRATE_ONLY|vibrate_only|Sessiz / Yalnızca Titreşim"))
             .isEqualTo(SoundOption.VibrateOnly)
     }
+
+    @Test
+    fun `values containing the legacy separator survive a round trip`() {
+        val tricky = SoundOption.CustomFile(
+            id = "custom|1",
+            title = "Özel | Ses",
+            uriString = "content://audio/1?a=b|c"
+        )
+
+        assertThat(repository.deserializeSound(repository.serializeSound(tricky)))
+            .isEqualTo(tricky)
+    }
+
+    @Test
+    fun `silent and vibrate options survive a round trip`() {
+        assertThat(repository.deserializeSound(repository.serializeSound(SoundOption.Silent)))
+            .isEqualTo(SoundOption.Silent)
+        assertThat(repository.deserializeSound(repository.serializeSound(SoundOption.VibrateOnly)))
+            .isEqualTo(SoundOption.VibrateOnly)
+    }
 }

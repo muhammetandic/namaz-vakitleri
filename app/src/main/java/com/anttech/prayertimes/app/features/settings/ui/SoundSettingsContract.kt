@@ -52,5 +52,4 @@ sealed interface SoundSettingsIntent {
 
 sealed interface SoundSettingsUiEffect {
     data class ShowToast(val message: String) : SoundSettingsUiEffect
-    object LaunchSystemAudioPicker : SoundSettingsUiEffect
 }

@@ -1,6 +1,7 @@
 package com.anttech.prayertimes.core.location
 
 import android.content.Context
+import com.anttech.prayertimes.core.common.IoDispatcher
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import dagger.Module
@@ -8,6 +9,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineDispatcher
 import javax.inject.Singleton
 
 @Module
@@ -31,9 +33,10 @@ object LocationModule {
     fun provideLocationTracker(
         @ApplicationContext context: Context,
         fusedLocationProviderClient: FusedLocationProviderClient,
-        geocoderHelper: GeocoderHelper
+        geocoderHelper: GeocoderHelper,
+        @IoDispatcher ioDispatcher: CoroutineDispatcher
     ): LocationTracker {
-        return DefaultLocationTracker(context, fusedLocationProviderClient, geocoderHelper)
+        return DefaultLocationTracker(context, fusedLocationProviderClient, geocoderHelper, ioDispatcher)
     }
 
     @Provides

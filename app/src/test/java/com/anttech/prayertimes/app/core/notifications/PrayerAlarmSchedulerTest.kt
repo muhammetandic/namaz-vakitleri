@@ -48,6 +48,15 @@ class PrayerAlarmSchedulerTest {
         override fun getMonthlyPrayerTimes(city: String, yearMonth: String): Flow<List<PrayerTimes>> =
             flowOf(emptyList())
 
+        override suspend fun getPrayerTimesBetween(
+            city: String,
+            start: LocalDate,
+            end: LocalDate
+        ): List<PrayerTimes> = timesByDate
+            .filterKeys { it >= start && it <= end }
+            .values
+            .sortedBy { it.date }
+
         override suspend fun syncMonthlyPrayerTimes(city: String): Result<Unit> =
             Result.success(Unit)
 
@@ -58,6 +67,23 @@ class PrayerAlarmSchedulerTest {
 
         override suspend fun getCachedCity(): String? = null
     }
+
+
+    private fun createScheduler(
+        repository: TimesRepository,
+        alarmScheduler: AlarmScheduler,
+        lastCityStore: LastCityStore,
+        notificationPreferences: NotificationPreferencesRepository = FakeNotificationPreferences(),
+        fastingAlarmPreferences: FastingAlarmPreferencesRepository = FakeFastingAlarmPreferences(),
+        hasActiveWidgets: suspend () -> Boolean = { false }
+    ) = PrayerAlarmScheduler(
+        repository = repository,
+        alarmScheduler = alarmScheduler,
+        lastCityStore = lastCityStore,
+        notificationPreferences = notificationPreferences,
+        fastingAlarmPreferences = fastingAlarmPreferences,
+        hasActiveWidgets = hasActiveWidgets
+    )
 
     private class FakeLastCityStore(var city: String? = null) : LastCityStore {
         override suspend fun saveCity(city: String) {
@@ -91,7 +117,7 @@ class PrayerAlarmSchedulerTest {
         )
         val scheduler = RecordingAlarmScheduler()
         val cityStore = FakeLastCityStore()
-        val subject = PrayerAlarmScheduler(repository, scheduler, cityStore)
+        val subject = createScheduler(repository, scheduler, cityStore)
 
         subject.scheduleUpcoming("İstanbul")
 
@@ -113,7 +139,7 @@ class PrayerAlarmSchedulerTest {
         val tomorrow = today.plusDays(1)
         val repository = FakeTimesRepository(mapOf(tomorrow to prayerTimes(tomorrow)))
         val scheduler = RecordingAlarmScheduler()
-        val subject = PrayerAlarmScheduler(repository, scheduler, FakeLastCityStore())
+        val subject = createScheduler(repository, scheduler, FakeLastCityStore())
 
         subject.scheduleUpcoming("İstanbul")
 
@@ -125,7 +151,7 @@ class PrayerAlarmSchedulerTest {
         val tomorrow = today.plusDays(1)
         val repository = FakeTimesRepository(mapOf(tomorrow to prayerTimes(tomorrow)))
         val scheduler = RecordingAlarmScheduler()
-        val subject = PrayerAlarmScheduler(
+        val subject = createScheduler(
             repository,
             scheduler,
             FakeLastCityStore(city = "Ankara")
@@ -140,7 +166,7 @@ class PrayerAlarmSchedulerTest {
     fun `rescheduleSaved does nothing when no city saved`() = runTest {
         val repository = FakeTimesRepository(emptyMap())
         val scheduler = RecordingAlarmScheduler()
-        val subject = PrayerAlarmScheduler(repository, scheduler, FakeLastCityStore(city = null))
+        val subject = createScheduler(repository, scheduler, FakeLastCityStore(city = null))
 
         subject.rescheduleSaved()
 
@@ -153,7 +179,7 @@ class PrayerAlarmSchedulerTest {
         val repository = FakeTimesRepository(mapOf(tomorrow to prayerTimes(tomorrow)))
         val scheduler = RecordingAlarmScheduler()
         val cityStore = FakeLastCityStore()
-        val subject = PrayerAlarmScheduler(
+        val subject = createScheduler(
             repository,
             scheduler,
             cityStore,
@@ -171,7 +197,7 @@ class PrayerAlarmSchedulerTest {
         val farDay = today.plusDays(40)
         val repository = FakeTimesRepository(mapOf(farDay to prayerTimes(farDay)))
         val scheduler = RecordingAlarmScheduler()
-        val subject = PrayerAlarmScheduler(repository, scheduler, FakeLastCityStore())
+        val subject = createScheduler(repository, scheduler, FakeLastCityStore())
 
         subject.scheduleUpcoming("İstanbul")
 
@@ -183,7 +209,7 @@ class PrayerAlarmSchedulerTest {
         val tomorrow = today.plusDays(1)
         val repository = FakeTimesRepository(mapOf(tomorrow to prayerTimes(tomorrow)))
         val scheduler = RecordingAlarmScheduler()
-        val subject = PrayerAlarmScheduler(
+        val subject = createScheduler(
             repository,
             scheduler,
             FakeLastCityStore(),
@@ -201,7 +227,7 @@ class PrayerAlarmSchedulerTest {
         val tomorrow = today.plusDays(1)
         val repository = FakeTimesRepository(mapOf(tomorrow to prayerTimes(tomorrow)))
         val scheduler = RecordingAlarmScheduler()
-        val subject = PrayerAlarmScheduler(
+        val subject = createScheduler(
             repository,
             scheduler,
             FakeLastCityStore(city = "İstanbul"),
@@ -210,7 +236,7 @@ class PrayerAlarmSchedulerTest {
         subject.scheduleUpcoming("İstanbul")
         assertThat(scheduler.scheduled).hasSize(6)
 
-        val disabled = PrayerAlarmScheduler(
+        val disabled = createScheduler(
             repository,
             scheduler,
             FakeLastCityStore(city = "İstanbul"),
@@ -243,7 +269,7 @@ class PrayerAlarmSchedulerTest {
         val tomorrow = today.plusDays(1)
         val repository = FakeTimesRepository(mapOf(tomorrow to prayerTimes(tomorrow)))
         val scheduler = RecordingAlarmScheduler()
-        val subject = PrayerAlarmScheduler(
+        val subject = createScheduler(
             repository,
             scheduler,
             FakeLastCityStore(),
@@ -264,7 +290,7 @@ class PrayerAlarmSchedulerTest {
         val tomorrow = today.plusDays(1)
         val repository = FakeTimesRepository(mapOf(tomorrow to prayerTimes(tomorrow)))
         val scheduler = RecordingAlarmScheduler()
-        val subject = PrayerAlarmScheduler(
+        val subject = createScheduler(
             repository,
             scheduler,
             FakeLastCityStore(),
@@ -282,7 +308,7 @@ class PrayerAlarmSchedulerTest {
         val tomorrow = today.plusDays(1)
         val repository = FakeTimesRepository(mapOf(tomorrow to prayerTimes(tomorrow)))
         val scheduler = RecordingAlarmScheduler()
-        val subject = PrayerAlarmScheduler(
+        val subject = createScheduler(
             repository,
             scheduler,
             FakeLastCityStore(),
@@ -299,7 +325,7 @@ class PrayerAlarmSchedulerTest {
         val tomorrow = today.plusDays(1)
         val repository = FakeTimesRepository(mapOf(tomorrow to prayerTimes(tomorrow)))
         val scheduler = RecordingAlarmScheduler()
-        val subject = PrayerAlarmScheduler(
+        val subject = createScheduler(
             repository,
             scheduler,
             FakeLastCityStore(),

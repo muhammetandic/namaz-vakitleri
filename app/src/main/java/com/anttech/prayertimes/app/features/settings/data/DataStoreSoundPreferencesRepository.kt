@@ -1,7 +1,10 @@
 package com.anttech.prayertimes.features.settings.data
 
 import android.content.Context
+import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.emptyPreferences
+import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -9,17 +12,31 @@ import com.anttech.prayertimes.features.settings.domain.SoundOption
 import com.anttech.prayertimes.features.settings.domain.SoundPreferencesRepository
 import com.anttech.prayertimes.features.times.domain.PrayerType
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
+import java.io.IOException
+import java.nio.charset.StandardCharsets
+import java.util.Base64
 
-private val Context.soundDataStore by preferencesDataStore(name = "sound_preferences")
+private val Context.soundDataStore by preferencesDataStore(
+    name = "sound_preferences",
+    corruptionHandler = ReplaceFileCorruptionHandler { emptyPreferences() }
+)
 
 class DataStoreSoundPreferencesRepository(
     private val context: Context
 ) : SoundPreferencesRepository {
 
+    private val safeData: Flow<Preferences> by lazy {
+        context.soundDataStore.data.catch { throwable ->
+            // Bozuk dosya: varsayılanlara düş, uygulamayı kilitleme.
+            if (throwable is IOException) emit(emptyPreferences()) else throw throwable
+        }
+    }
+
     override fun getSoundForPrayer(prayerType: PrayerType): Flow<SoundOption> {
         val key = stringPreferencesKey("sound_${prayerType.name}")
-        return context.soundDataStore.data.map { preferences ->
+        return safeData.map { preferences ->
             val serialized = preferences[key]
             if (serialized != null) {
                 deserializeSound(serialized)
@@ -37,7 +54,7 @@ class DataStoreSoundPreferencesRepository(
         }
     }
 
-    override val globalVolume: Flow<Float> = context.soundDataStore.data.map { preferences ->
+    override val globalVolume: Flow<Float> = safeData.map { preferences ->
         val percent = preferences[GLOBAL_VOLUME_KEY] ?: (SoundPreferencesRepository.DEFAULT_VOLUME * 100).toInt()
         (percent / 100f).coerceIn(0f, 1f)
     }
@@ -50,7 +67,7 @@ class DataStoreSoundPreferencesRepository(
 
     override fun getDelayMinutesForPrayer(prayerType: PrayerType): Flow<Int> {
         val key = intPreferencesKey("delay_${prayerType.name}")
-        return context.soundDataStore.data.map { preferences ->
+        return safeData.map { preferences ->
             preferences[key] ?: 0
         }
     }
@@ -61,7 +78,7 @@ class DataStoreSoundPreferencesRepository(
         }
     }
 
-    override fun getSahurAlarmSound(): Flow<SoundOption?> = context.soundDataStore.data.map { preferences ->
+    override fun getSahurAlarmSound(): Flow<SoundOption?> = safeData.map { preferences ->
         preferences[SAHUR_ALARM_SOUND_KEY]?.let { deserializeSound(it) }
     }
 
@@ -75,16 +92,47 @@ class DataStoreSoundPreferencesRepository(
         }
     }
 
-    private fun serializeSound(soundOption: SoundOption): String {
+    internal fun serializeSound(soundOption: SoundOption): String {
+        // Alanlar Base64 ile kodlanır; başlık ya da URI içindeki ayırıcılar
+        // kaydı bozamaz. "v2" öneki eski kayıtlardan ayırt eder.
         return when (soundOption) {
-            is SoundOption.BuiltIn -> "BUILTIN|${soundOption.id}|${soundOption.title}|${soundOption.resName}"
-            is SoundOption.CustomFile -> "CUSTOM|${soundOption.id}|${soundOption.title}|${soundOption.uriString}"
-            is SoundOption.Silent -> "SILENT|silent|Sessiz"
-            is SoundOption.VibrateOnly -> "VIBRATE_ONLY|vibrate_only|Sessiz / Yalnızca Titreşim"
+            is SoundOption.BuiltIn -> listOf(
+                "v2", "BUILTIN",
+                encode(soundOption.id), encode(soundOption.title), encode(soundOption.resName)
+            ).joinToString("|")
+            is SoundOption.CustomFile -> listOf(
+                "v2", "CUSTOM",
+                encode(soundOption.id), encode(soundOption.title), encode(soundOption.uriString)
+            ).joinToString("|")
+            is SoundOption.Silent -> listOf(
+                "v2", "SILENT", encode(soundOption.id), encode(soundOption.title)
+            ).joinToString("|")
+            is SoundOption.VibrateOnly -> listOf(
+                "v2", "VIBRATE_ONLY", encode(soundOption.id), encode(soundOption.title)
+            ).joinToString("|")
         }
     }
 
     internal fun deserializeSound(serialized: String): SoundOption {
+        if (serialized.startsWith("v2|")) {
+            val parts = serialized.split("|")
+            return when (parts.getOrNull(1)) {
+                "BUILTIN" -> if (parts.size >= 5) {
+                    SoundOption.BuiltIn(decode(parts[2]), decode(parts[3]), decode(parts[4]))
+                } else {
+                    SoundOption.Silent
+                }
+                "CUSTOM" -> if (parts.size >= 5) {
+                    SoundOption.CustomFile(decode(parts[2]), decode(parts[3]), decode(parts[4]))
+                } else {
+                    SoundOption.Silent
+                }
+                "SILENT" -> SoundOption.Silent
+                "VIBRATE_ONLY" -> SoundOption.VibrateOnly
+                else -> SoundOption.Silent
+            }
+        }
+        // Eski (v1) kayıt biçimi: geriye dönük okunur.
         val parts = serialized.split("|")
         if (parts.size < 3) return SoundOption.Silent
         return when (parts[0]) {
@@ -94,6 +142,15 @@ class DataStoreSoundPreferencesRepository(
             else -> SoundOption.Silent
         }
     }
+
+    private fun encode(value: String): String = Base64.getEncoder().encodeToString(
+        value.toByteArray(StandardCharsets.UTF_8)
+    )
+
+    private fun decode(value: String): String = String(
+        Base64.getDecoder().decode(value),
+        StandardCharsets.UTF_8
+    )
 
     private fun defaultSoundFor(prayerType: PrayerType): SoundOption {
         return SoundOption.defaultFor(prayerType)

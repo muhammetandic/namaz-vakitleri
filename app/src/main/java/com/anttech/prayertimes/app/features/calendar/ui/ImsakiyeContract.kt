@@ -10,7 +10,6 @@ data class ImsakiyeUiState(
     val yearMonth: String = "",
     val days: List<ImsakiyeDay> = emptyList(),
     val todayImsakiye: ImsakiyeDay? = null,
-    val isRamazanMode: Boolean = true,
     val fontSizeMultiplier: Float = 1.0f,
     // Fasting tracking card data
     val nonFastedRamadanDays: List<FastTrackingDay> = emptyList(),
@@ -21,13 +20,6 @@ data class ImsakiyeUiState(
 sealed interface ImsakiyeIntent {
     data class LoadImsakiye(val city: String, val yearMonth: String) : ImsakiyeIntent
     data class ToggleFastedDay(
-        val date: LocalDate,
-        val hijriDay: Int,
-        val hijriMonth: Int,
-        val hijriMonthName: String,
-        val hijriYear: Int
-    ) : ImsakiyeIntent
-    data class ToggleTrackedDay(
         val date: LocalDate,
         val hijriDay: Int,
         val hijriMonth: Int,

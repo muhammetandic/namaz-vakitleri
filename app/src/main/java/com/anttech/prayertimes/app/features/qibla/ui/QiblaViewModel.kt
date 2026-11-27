@@ -8,11 +8,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -28,11 +26,7 @@ class QiblaViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(QiblaUiState())
     val uiState: StateFlow<QiblaUiState> = _uiState.asStateFlow()
 
-    private val _effect = Channel<QiblaUiEffect>(Channel.BUFFERED)
-    val effect = _effect.receiveAsFlow()
-
     private var sensorJob: Job? = null
-    private var previouslyAligned = false
 
     fun sendIntent(intent: QiblaIntent) {
         when (intent) {
@@ -88,13 +82,6 @@ class QiblaViewModel @Inject constructor(
                 isAligned = isAligned
             )
         }
-
-        if (isAligned && !previouslyAligned) {
-            viewModelScope.launch(dispatcher) {
-                _effect.send(QiblaUiEffect.TriggerVibration)
-            }
-        }
-        previouslyAligned = isAligned
     }
 
     private fun stopCompass() {

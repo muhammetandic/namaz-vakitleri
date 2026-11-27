@@ -6,6 +6,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import com.anttech.prayertimes.core.ui.theme.NamazVakitleriTheme
 import com.anttech.prayertimes.features.settings.domain.SoundOption
 import com.anttech.prayertimes.features.times.domain.PrayerType
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
@@ -53,7 +54,7 @@ class SoundSettingsScreenTest {
         composeTestRule.onNodeWithTag("sound_item_${SoundOption.EZAN_ANVER_DUMAN.id}").performClick()
 
         composeTestRule.waitForIdle()
-        assert(intents.any { it is SoundSettingsIntent.ApplySoundToAll })
+        assertTrue(intents.any { it is SoundSettingsIntent.ApplySoundToAll })
     }
 
     @Test
@@ -74,7 +75,7 @@ class SoundSettingsScreenTest {
         composeTestRule.onNodeWithTag("sound_item_${SoundOption.EZAN_ANVER_DUMAN.id}").performClick()
 
         composeTestRule.waitForIdle()
-        assert(
+        assertTrue(
             intents.any {
                 it is SoundSettingsIntent.SelectSound && it.prayerType == PrayerType.OGLE
             }
@@ -96,12 +97,12 @@ class SoundSettingsScreenTest {
 
         composeTestRule.onAllNodesWithContentDescription("Sesi Dinle")[0].performClick()
         composeTestRule.waitForIdle()
-        assert(intents.any { it is SoundSettingsIntent.PlayPreview })
+        assertTrue(intents.any { it is SoundSettingsIntent.PlayPreview })
 
         composeTestRule.onNodeWithTag("select_sound_OGLE").performClick()
         composeTestRule.waitForIdle()
 
-        assert(intents.contains(SoundSettingsIntent.StopPreview))
+        assertTrue(intents.contains(SoundSettingsIntent.StopPreview))
     }
 
     @Test
@@ -123,6 +124,6 @@ class SoundSettingsScreenTest {
         composeTestRule.runOnIdle { isScreenVisible.value = false }
         composeTestRule.waitForIdle()
 
-        assert(intents.contains(SoundSettingsIntent.StopPreview))
+        assertTrue(intents.contains(SoundSettingsIntent.StopPreview))
     }
 }

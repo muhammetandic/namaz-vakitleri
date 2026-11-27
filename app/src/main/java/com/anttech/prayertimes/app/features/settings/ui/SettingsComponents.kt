@@ -15,9 +15,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.FormatSize
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,6 +32,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.anttech.prayertimes.core.ui.theme.BrandOrange
+import com.anttech.prayertimes.features.settings.domain.DisplayPreferencesRepository
+import kotlin.math.roundToInt
 
 /** Ayarlar ekranlarının ortak bölüm başlığı ve kart görünümü. */
 @Composable
@@ -124,6 +128,50 @@ internal fun SettingsItem(
             modifier = Modifier.size(22.dp),
             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
         )
+    }
+}
+
+/** Yazı boyutu kaydırıcısı içeren ayar satırı. */
+@Composable
+internal fun SettingsFontScaleRow(
+    scale: Float,
+    value: Float,
+    modifier: Modifier = Modifier,
+    onValueChange: (Float) -> Unit
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .heightIn(min = 72.dp)
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        SettingsIcon(icon = Icons.Default.FormatSize, contentDescription = null)
+        Spacer(modifier = Modifier.width(14.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "Yazı Boyutu",
+                    fontSize = (16 * scale).sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f)
+                )
+                Text(
+                    text = "%${(value * 100).roundToInt()}",
+                    fontSize = (13 * scale).sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = BrandOrange
+                )
+            }
+            Slider(
+                value = value,
+                onValueChange = onValueChange,
+                valueRange = DisplayPreferencesRepository.MIN_FONT_SCALE..
+                    DisplayPreferencesRepository.MAX_FONT_SCALE,
+                steps = 4
+            )
+        }
     }
 }
 

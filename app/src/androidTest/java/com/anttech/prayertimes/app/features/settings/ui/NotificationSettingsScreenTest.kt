@@ -3,6 +3,7 @@ package com.anttech.prayertimes.features.settings.ui
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.anttech.prayertimes.core.ui.theme.NamazVakitleriTheme
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
@@ -48,8 +49,8 @@ class NotificationSettingsScreenTest {
         composeTestRule.onNodeWithTag("notification_enabled_row").performClick()
         composeTestRule.onNodeWithTag("notification_vibration_row").performClick()
 
-        assert(intents[0] == NotificationSettingsIntent.ToggleNotifications)
-        assert(intents[1] == NotificationSettingsIntent.ToggleVibration)
+        assertTrue(intents[0] == NotificationSettingsIntent.ToggleNotifications)
+        assertTrue(intents[1] == NotificationSettingsIntent.ToggleVibration)
     }
 
     @Test
@@ -59,7 +60,7 @@ class NotificationSettingsScreenTest {
 
         composeTestRule.onNodeWithTag("notification_permission_banner").assertIsDisplayed()
         composeTestRule.onNodeWithTag("notification_permission_button").performClick()
-        assert(requested)
+        assertTrue(requested)
 
         composeTestRule.onNodeWithTag("notification_test_button").assertIsNotEnabled()
     }
@@ -79,7 +80,7 @@ class NotificationSettingsScreenTest {
 
         composeTestRule.onNodeWithTag("notification_test_button").performClick()
 
-        assert(intents.single() == NotificationSettingsIntent.SendTestNotification)
+        assertTrue(intents.single() == NotificationSettingsIntent.SendTestNotification)
     }
 
     // @Test
@@ -89,6 +90,6 @@ class NotificationSettingsScreenTest {
 //
 //     composeTestRule.onNodeWithTag("notification_sound_row").performClick()
 //
-//     assert(opened)
+//     assertTrue(opened)
 // }
 }

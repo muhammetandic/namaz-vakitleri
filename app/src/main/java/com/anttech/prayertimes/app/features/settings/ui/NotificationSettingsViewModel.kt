@@ -78,9 +78,17 @@ class NotificationSettingsViewModel @Inject constructor(
     }
 
     private fun sendTestNotification() {
-        testNotificationSender.send()
         viewModelScope.launch(dispatcher) {
-            _effect.send(NotificationSettingsUiEffect.ShowToast("Test bildirimi gönderildi"))
+            if (testNotificationSender.isAvailable) {
+                testNotificationSender.send()
+                _effect.send(NotificationSettingsUiEffect.ShowToast("Test bildirimi gönderildi"))
+            } else {
+                _effect.send(
+                    NotificationSettingsUiEffect.ShowToast(
+                        "Test bildirimi yalnızca geliştirici derlemesinde kullanılabilir"
+                    )
+                )
+            }
         }
     }
 }

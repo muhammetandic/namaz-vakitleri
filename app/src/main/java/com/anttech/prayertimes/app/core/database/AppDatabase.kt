@@ -12,13 +12,20 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 @Database(
     entities = [PrayerTimeEntity::class, FastTrackingEntity::class],
     version = 3,
-    exportSchema = false
+    exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun prayerTimeDao(): PrayerTimeDao
     abstract fun fastTrackingDao(): FastTrackingDao
 
     companion object {
+        /** v2, kaldırılan kaza sayacı tablosunu siler; vakit verileri korunur. */
+        val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("DROP TABLE IF EXISTS kaza_counts")
+            }
+        }
+
         val MIGRATION_2_3 = object : Migration(2, 3) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 // Migrate existing prayer_times: preserve data, add Hijri columns
@@ -35,10 +42,10 @@ abstract class AppDatabase : RoomDatabase() {
                         aksam TEXT NOT NULL,
                         yatsi TEXT NOT NULL,
                         tomorrowImsak TEXT,
-                        hijriDay INTEGER NOT NULL DEFAULT 1,
-                        hijriMonth INTEGER NOT NULL DEFAULT 1,
-                        hijriMonthName TEXT NOT NULL DEFAULT '',
-                        hijriYear INTEGER NOT NULL DEFAULT 1448
+                        hijriDay INTEGER NOT NULL,
+                        hijriMonth INTEGER NOT NULL,
+                        hijriMonthName TEXT NOT NULL,
+                        hijriYear INTEGER NOT NULL
                     )
                 """.trimIndent())
 
@@ -64,10 +71,10 @@ abstract class AppDatabase : RoomDatabase() {
                         date TEXT NOT NULL,
                         hijriMonth INTEGER NOT NULL,
                         hijriDay INTEGER NOT NULL,
-                        hijriMonthName TEXT NOT NULL DEFAULT '',
-                        hijriYear INTEGER NOT NULL DEFAULT 1448,
-                        isMarked INTEGER NOT NULL DEFAULT 0,
-                        isForbidden INTEGER NOT NULL DEFAULT 0
+                        hijriMonthName TEXT NOT NULL,
+                        hijriYear INTEGER NOT NULL,
+                        isMarked INTEGER NOT NULL,
+                        isForbidden INTEGER NOT NULL
                     )
                 """.trimIndent())
                 db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_fast_tracking_city_date ON fast_tracking (city, date)")

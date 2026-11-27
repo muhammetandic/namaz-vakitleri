@@ -17,6 +17,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.anttech.prayertimes.core.ui.theme.BrandOrange
 import com.anttech.prayertimes.features.qibla.domain.CalculateQiblaAngleUseCase
 import org.osmdroid.config.Configuration
@@ -28,6 +31,14 @@ import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Polyline
 import kotlin.math.roundToInt
 
+/** AndroidView geri çağrıları arasında paylaşılan harita ve katman referansları. */
+private class QiblaMapHolder {
+    var mapView: MapView? = null
+    var userMarker: Marker? = null
+    var kaabaMarker: Marker? = null
+    var qiblaLine: Polyline? = null
+}
+
 @Composable
 fun QiblaMapContent(
     userLat: Double,
@@ -37,16 +48,36 @@ fun QiblaMapContent(
     fontScale: Float = 1.0f,
     modifier: Modifier = Modifier
 ) {
-    var mapViewRef by remember { mutableStateOf<MapView?>(null) }
+    val holder = remember { QiblaMapHolder() }
+    val lifecycleOwner = LocalLifecycleOwner.current
 
     val userPoint = remember(userLat, userLng) { GeoPoint(userLat, userLng) }
     val kaabaPoint = remember {
         GeoPoint(CalculateQiblaAngleUseCase.KAABA_LATITUDE, CalculateQiblaAngleUseCase.KAABA_LONGITUDE)
     }
 
-    DisposableEffect(Unit) {
+    // Harita yaşam döngüsü ekranın yaşam döngüsüne bağlanır: yeniden çizim
+    // sırasında onResume() çağrılmaz, ekran durunca onPause() çalışır.
+    DisposableEffect(lifecycleOwner, holder) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> holder.mapView?.onResume()
+                Lifecycle.Event.ON_PAUSE -> holder.mapView?.onPause()
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+            holder.mapView?.onResume()
+        }
         onDispose {
-            mapViewRef?.onDetach()
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            holder.mapView?.onPause()
+            holder.mapView?.onDetach()
+            holder.mapView = null
+            holder.userMarker = null
+            holder.kaabaMarker = null
+            holder.qiblaLine = null
         }
     }
 
@@ -93,11 +124,27 @@ fun QiblaMapContent(
                     controller.setZoom(17.5)
                     controller.setCenter(userPoint)
 
-                    mapViewRef = this
+                    holder.mapView = this
+                    holder.userMarker = userMarker
+                    holder.kaabaMarker = kaabaMarker
+                    holder.qiblaLine = qiblaLine
+
+                    // Harita oluşturulduğunda ekran zaten görünürse hemen başlat.
+                    if (lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+                        onResume()
+                    }
                 }
             },
             update = { mapView ->
-                mapView.onResume()
+                // Konum değişince işaretçiler ve çizgi güncellenir.
+                holder.userMarker?.apply {
+                    position = userPoint
+                    title = if (cityName.isNotBlank()) "Konumunuz: $cityName" else "Konumunuz"
+                }
+                holder.qiblaLine?.apply {
+                    setPoints(listOf(userPoint, kaabaPoint))
+                }
+                mapView.invalidate()
             },
             modifier = Modifier.fillMaxSize()
         )
@@ -147,7 +194,7 @@ fun QiblaMapContent(
             // Konumuma Odaklan (Yakın)
             SmallFloatingActionButton(
                 onClick = {
-                    mapViewRef?.controller?.apply {
+                    holder.mapView?.controller?.apply {
                         setZoom(17.5)
                         animateTo(userPoint)
                     }
@@ -165,7 +212,7 @@ fun QiblaMapContent(
             // Kâbe Rotasını Göster (Geniş Bakış)
             SmallFloatingActionButton(
                 onClick = {
-                    mapViewRef?.controller?.apply {
+                    holder.mapView?.controller?.apply {
                         setZoom(5.5)
                         animateTo(userPoint)
                     }

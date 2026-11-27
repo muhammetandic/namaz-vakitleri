@@ -2,17 +2,20 @@ package com.anttech.prayertimes.features.times.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.anttech.prayertimes.core.common.IoDispatcher
 import com.anttech.prayertimes.core.location.GeocoderHelper
 import com.anttech.prayertimes.core.location.LocationTracker
 import com.anttech.prayertimes.core.location.SelectedCityStore
 import com.anttech.prayertimes.core.notifications.PrayerAlarmScheduler
 import com.anttech.prayertimes.features.times.domain.CalculateKerahaStatusUseCase
 import com.anttech.prayertimes.features.times.domain.CalculateNextPrayerUseCase
+import com.anttech.prayertimes.features.times.domain.PrayerTimes
+import com.anttech.prayertimes.features.settings.domain.DisplayPreferencesRepository
 import com.anttech.prayertimes.features.times.domain.TimesRepository
 import com.anttech.prayertimes.features.widget.WidgetUpdater
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,6 +24,7 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -35,16 +39,40 @@ class TimesViewModel @Inject constructor(
     private val prayerAlarmScheduler: PrayerAlarmScheduler,
     private val selectedCityStore: SelectedCityStore,
     private val geocoderHelper: GeocoderHelper,
-    private val widgetUpdater: WidgetUpdater
+    private val widgetUpdater: WidgetUpdater,
+    private val displayPreferences: DisplayPreferencesRepository,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : ViewModel() {
-
-    private val dispatcher: CoroutineDispatcher = Dispatchers.Main
 
     private val _uiState = MutableStateFlow(TimesUiState())
     val uiState: StateFlow<TimesUiState> = _uiState.asStateFlow()
 
     private val _effect = Channel<TimesUiEffect>(Channel.BUFFERED)
     val effect = _effect.receiveAsFlow()
+
+    private var loadJob: Job? = null
+
+    init {
+        // Görünüm tercihleri kalıcıdır; ilk değer olarak yayınlanır.
+        viewModelScope.launch {
+            displayPreferences.fontSizeMultiplier.collect { multiplier ->
+                _uiState.update { state ->
+                    if (state.fontSizeMultiplier == multiplier) {
+                        state
+                    } else {
+                        state.copy(fontSizeMultiplier = multiplier)
+                    }
+                }
+            }
+        }
+        viewModelScope.launch {
+            displayPreferences.isSimpleMode.collect { enabled ->
+                _uiState.update { state ->
+                    if (state.isSimpleMode == enabled) state else state.copy(isSimpleMode = enabled)
+                }
+            }
+        }
+    }
 
     fun sendIntent(intent: TimesIntent) {
         when (intent) {
@@ -53,59 +81,60 @@ class TimesViewModel @Inject constructor(
             is TimesIntent.UseLocation -> useLocation()
             is TimesIntent.TickSecond -> updateCountdownAndKeraha()
             is TimesIntent.ToggleSimpleMode -> toggleSimpleMode()
+            is TimesIntent.SetFontScale -> setFontScale(intent.scale)
             is TimesIntent.RefreshLocation -> refreshLocation()
         }
     }
 
     private fun changeCity(city: String) {
-        viewModelScope.launch(dispatcher) {
-            // Extract city name and district from "City, District" format
+        loadJob?.cancel()
+        loadJob = viewModelScope.launch {
             val (cityName, district) = parseCityString(city)
             selectedCityStore.saveCity(cityName, district)
-            // Elle seçilen şehir için kıble koordinatlarını güncelle
             updateCoordinatesForCity(cityName, district)
-            // Use full city string (may include district) for API call
-            loadPrayerTimes(city)
+            loadPrayerTimesInternal(city)
         }
     }
 
     /** İleri geocode ile şehrin koordinatlarını bulur; bulamazsa mevcut konumu korur. */
-    private fun updateCoordinatesForCity(cityName: String, district: String?) {
-        val coordinates = geocoderHelper.getCoordinatesForCity(cityName, district) ?: return
+    private suspend fun updateCoordinatesForCity(cityName: String, district: String?) {
+        val coordinates = withContext(ioDispatcher) {
+            geocoderHelper.getCoordinatesForCity(cityName, district)
+        } ?: return
         _uiState.update {
             it.copy(latitude = coordinates.first, longitude = coordinates.second)
         }
     }
 
     private fun parseCityString(cityString: String): Pair<String, String?> {
-        return if (cityString.contains(",")) {
-            val parts = cityString.split(",")
-            val city = parts[0].trim()
-            val district = if (parts.size > 1) parts[1].trim() else null
-            city to district
-        } else {
-            cityString to null
-        }
+        val parts = cityString.split(",", limit = 2)
+        val city = parts[0].trim()
+        val district = parts.getOrNull(1)?.trim()?.takeIf { it.isNotEmpty() }
+        return city to district
     }
 
     private fun useLocation() {
-        viewModelScope.launch(dispatcher) {
+        viewModelScope.launch {
             selectedCityStore.clearCity()
             refreshLocation()
         }
     }
 
     private fun refreshLocation() {
-        viewModelScope.launch(dispatcher) {
+        loadJob?.cancel()
+        loadJob = viewModelScope.launch {
             val savedCity = selectedCityStore.getCity()
             if (savedCity != null) {
-                // Kayıtlı elle seçilmiş şehir: GPS'e gitmeden vakitleri ve koordinatları yükle
+                // Kayıtlı elle seçilmiş şehir: GPS'e gitmeden vakitleri ve koordinatları yükle.
                 val (cityName, district) = parseCityString(savedCity)
                 updateCoordinatesForCity(cityName, district)
-                loadPrayerTimes(savedCity)
+                loadPrayerTimesInternal(savedCity)
                 return@launch
             }
-            val location = locationTracker.getCurrentLocation()
+
+            val location = withTimeoutOrNull(LOCATION_TIMEOUT_MS) {
+                locationTracker.getCurrentLocation()
+            }
             if (location != null) {
                 _uiState.update {
                     it.copy(
@@ -114,57 +143,83 @@ class TimesViewModel @Inject constructor(
                         longitude = location.longitude
                     )
                 }
-                // Sync using full city string (may include district)
-                repository.syncMonthlyPrayerTimes(location.displayName)
-                loadPrayerTimes(location.displayName)
+                loadPrayerTimesInternal(location.displayName)
             } else {
                 _effect.send(TimesUiEffect.ShowToast("Konum alınamadı. Varsayılan şehir kullanılıyor."))
                 if (_uiState.value.prayerTimes == null) {
-                    loadPrayerTimes("İstanbul")
+                    loadPrayerTimesInternal(DEFAULT_CITY)
                 }
             }
         }
     }
 
     private fun loadPrayerTimes(city: String) {
-        viewModelScope.launch(dispatcher) {
-            _uiState.update { it.copy(isLoading = true, city = city) }
-            val today = LocalDate.now()
-            // Use full city string (may include district) for API call
-            val queryCity = city
-            
-            // First try to sync from API with full city string
-            repository.syncMonthlyPrayerTimes(queryCity)
-            
-            // Then load from DB with timeout
-            val times: com.anttech.prayertimes.features.times.domain.PrayerTimes? = withTimeoutOrNull(5000L) {
-                repository.getPrayerTimesForDate(city, today).firstOrNull()
+        loadJob?.cancel()
+        loadJob = viewModelScope.launch {
+            loadPrayerTimesInternal(city)
+        }
+    }
+
+    /**
+     * Offline-first yükleme: önce Room'daki önbellek gösterilir, ağ senkronizasyonu
+     * arka planda yapılır. Ağ yoksa mevcut önbellek ekranda kalır.
+     */
+    private suspend fun loadPrayerTimesInternal(city: String) {
+        val today = LocalDate.now()
+        if (_uiState.value.city != city) {
+            // Farklı şehre geçildi: eski şehrin vakitlerini göstermeye devam etme.
+            _uiState.update {
+                it.copy(prayerTimes = null, countdown = null, keraha = null)
             }
-            
-            if (times != null) {
-                val now = LocalDateTime.now()
-                val countdown = calculateNextPrayerUseCase(times, now)
-                val keraha = calculateKerahaStatusUseCase(times, now)
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        prayerTimes = times,
-                        countdown = countdown,
-                        keraha = keraha,
-                        errorMessage = null
-                    )
-                }
-                prayerAlarmScheduler.scheduleUpcoming(queryCity)
-                // Ana ekran widget'ları da yeni veriyle güncellensin.
-                widgetUpdater.updateAll()
-            } else {
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        errorMessage = "Vakitler bulunamadı. Lütfen internetinizi kontrol edin."
-                    )
-                }
+        }
+        _uiState.update {
+            it.copy(
+                city = city,
+                isLoading = it.prayerTimes == null,
+                errorMessage = null
+            )
+        }
+
+        val cached = withTimeoutOrNull(DB_TIMEOUT_MS) {
+            repository.getPrayerTimesForDate(city, today).firstOrNull()
+        }
+        if (cached != null) {
+            applyPrayerTimes(cached)
+        }
+
+        withContext(ioDispatcher) {
+            repository.syncMonthlyPrayerTimes(city)
+        }
+
+        val fresh = withTimeoutOrNull(DB_TIMEOUT_MS) {
+            repository.getPrayerTimesForDate(city, today).firstOrNull()
+        }
+        if (fresh != null) {
+            applyPrayerTimes(fresh)
+            prayerAlarmScheduler.scheduleUpcoming(city)
+            widgetUpdater.updateAll()
+        } else if (cached == null) {
+            _uiState.update {
+                it.copy(
+                    isLoading = false,
+                    errorMessage = "Vakitler bulunamadı. Lütfen internetinizi kontrol edin."
+                )
             }
+        }
+    }
+
+    private fun applyPrayerTimes(times: PrayerTimes) {
+        val now = LocalDateTime.now()
+        val countdown = calculateNextPrayerUseCase(times, now)
+        val keraha = calculateKerahaStatusUseCase(times, now)
+        _uiState.update {
+            it.copy(
+                isLoading = false,
+                prayerTimes = times,
+                countdown = countdown,
+                keraha = keraha,
+                errorMessage = null
+            )
         }
     }
 
@@ -183,6 +238,27 @@ class TimesViewModel @Inject constructor(
     }
 
     private fun toggleSimpleMode() {
-        _uiState.update { it.copy(isSimpleMode = !it.isSimpleMode) }
+        val enabled = !_uiState.value.isSimpleMode
+        _uiState.update { it.copy(isSimpleMode = enabled) }
+        viewModelScope.launch(ioDispatcher) {
+            displayPreferences.setSimpleMode(enabled)
+        }
+    }
+
+    private fun setFontScale(scale: Float) {
+        val clamped = scale.coerceIn(
+            DisplayPreferencesRepository.MIN_FONT_SCALE,
+            DisplayPreferencesRepository.MAX_FONT_SCALE
+        )
+        _uiState.update { it.copy(fontSizeMultiplier = clamped) }
+        viewModelScope.launch(ioDispatcher) {
+            displayPreferences.setFontSizeMultiplier(clamped)
+        }
+    }
+
+    private companion object {
+        const val DEFAULT_CITY = "İstanbul"
+        const val DB_TIMEOUT_MS = 5_000L
+        const val LOCATION_TIMEOUT_MS = 15_000L
     }
 }

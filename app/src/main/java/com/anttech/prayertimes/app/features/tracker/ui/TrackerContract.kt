@@ -17,9 +17,3 @@ sealed interface TrackerIntent {
     object ResetDhikr : TrackerIntent
     data class SelectPreset(val preset: DhikrPreset) : TrackerIntent
 }
-
-sealed interface TrackerUiEffect {
-    object TriggerTapVibration : TrackerUiEffect
-    object TriggerTargetVibration : TrackerUiEffect
-    data class ShowToast(val message: String) : TrackerUiEffect
-}

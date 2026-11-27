@@ -51,13 +51,6 @@ class ImsakiyeViewModel @Inject constructor(
                 intent.hijriMonthName,
                 intent.hijriYear
             )
-            is ImsakiyeIntent.ToggleTrackedDay -> toggleTrackedDay(
-                intent.date,
-                intent.hijriDay,
-                intent.hijriMonth,
-                intent.hijriMonthName,
-                intent.hijriYear
-            )
             is ImsakiyeIntent.ShareTodayImsakiye -> shareTodayImsakiye()
         }
     }
@@ -155,7 +148,7 @@ class ImsakiyeViewModel @Inject constructor(
             )
 
             val actionText = if (hijriMonth == 9) {
-                if (newMarked) "Kazaya kaldı olarak işaretlendi" else "Kaza işareti kaldırıldı"
+                if (newMarked) "Ramazan orucu tutulmadı olarak işaretlendi" else "Ramazan orucu işareti kaldırıldı"
             } else {
                 if (newMarked) "Nafile oruç işaretlendi" else "Nafile oruç işareti kaldırıldı"
             }
@@ -163,36 +156,6 @@ class ImsakiyeViewModel @Inject constructor(
             _effect.send(ImsakiyeUiEffect.ShowMessage(actionText))
 
             // Refresh the tracking card data (Room flow also refreshes todayImsakiye.isFasted)
-            loadFastingTrackingData()
-        }
-    }
-
-    private fun toggleTrackedDay(
-        date: LocalDate,
-        hijriDay: Int,
-        hijriMonth: Int,
-        hijriMonthName: String,
-        hijriYear: Int
-    ) {
-        viewModelScope.launch(dispatcher) {
-            val newMarked = fastTrackingRepository.toggleFastedDay(
-                city = _uiState.value.city,
-                date = date,
-                hijriDay = hijriDay,
-                hijriMonth = hijriMonth,
-                hijriMonthName = hijriMonthName,
-                hijriYear = hijriYear
-            )
-
-            val actionText = if (hijriMonth == 9) {
-                if (newMarked) "Kazaya kaldı olarak işaretlendi" else "Kaza işareti kaldırıldı"
-            } else {
-                if (newMarked) "Nafile oruç işaretlendi" else "Nafile oruç işareti kaldırıldı"
-            }
-
-            _effect.send(ImsakiyeUiEffect.ShowMessage(actionText))
-
-            // Refresh the tracking card data
             loadFastingTrackingData()
         }
     }

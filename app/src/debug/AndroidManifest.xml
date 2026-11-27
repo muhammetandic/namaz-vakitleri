@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Yalnızca debug derlemesinde bulunan ADB test araçları. -->
+    <application>
+        <receiver
+            android:name="com.anttech.prayertimes.core.notifications.TestSahurTriggerReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.anttech.prayertimes.action.TEST_SAHUR_NOTIFICATION" />
+            </intent-filter>
+        </receiver>
+
+        <activity
+            android:name="com.anttech.prayertimes.core.notifications.TestSahurActivity"
+            android:exported="true"
+            android:excludeFromRecents="true" />
+    </application>
+
+</manifest>

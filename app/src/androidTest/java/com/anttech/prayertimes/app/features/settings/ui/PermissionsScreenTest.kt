@@ -3,6 +3,7 @@ package com.anttech.prayertimes.features.settings.ui
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.anttech.prayertimes.core.ui.theme.NamazVakitleriTheme
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
@@ -64,7 +65,7 @@ class PermissionsScreenTest {
 
         composeTestRule.onNodeWithTag("permission_notifications_row_action").performClick()
 
-        assert(requested)
+        assertTrue(requested)
     }
 
     @Test
@@ -74,7 +75,7 @@ class PermissionsScreenTest {
 
         composeTestRule.onNodeWithTag("permission_location_row_action").performClick()
 
-        assert(requested)
+        assertTrue(requested)
     }
 
     @Test
@@ -84,7 +85,7 @@ class PermissionsScreenTest {
 
         composeTestRule.onNodeWithTag("permission_exact_alarm_row_action").performClick()
 
-        assert(opened)
+        assertTrue(opened)
     }
 
     @Test
@@ -94,6 +95,6 @@ class PermissionsScreenTest {
 
         composeTestRule.onNodeWithTag("permission_open_app_settings").performClick()
 
-        assert(opened)
+        assertTrue(opened)
     }
 }

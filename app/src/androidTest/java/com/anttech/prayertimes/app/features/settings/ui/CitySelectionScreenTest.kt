@@ -3,6 +3,7 @@ package com.anttech.prayertimes.features.settings.ui
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.anttech.prayertimes.core.ui.theme.NamazVakitleriTheme
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
@@ -30,7 +31,7 @@ class CitySelectionScreenTest {
         composeTestRule.onNodeWithTag("city_item_Ankara").performClick()
         composeTestRule.onNodeWithTag("save_selection").performClick()
 
-        assert(selectedCity == "Ankara")
+        assertTrue(selectedCity == "Ankara")
     }
 
     @Test
@@ -70,7 +71,7 @@ class CitySelectionScreenTest {
 
         composeTestRule.onNodeWithTag("use_location_button").performClick()
 
-        assert(useLocationClicked)
+        assertTrue(useLocationClicked)
     }
 
     @Test
@@ -92,7 +93,7 @@ class CitySelectionScreenTest {
         composeTestRule.onNodeWithTag("district_item_Çankaya").performClick()
         composeTestRule.onNodeWithTag("save_selection").performClick()
 
-        assert(selectedCity == "Ankara, Çankaya")
+        assertTrue(selectedCity == "Ankara, Çankaya")
     }
 
     @Test
@@ -115,6 +116,6 @@ class CitySelectionScreenTest {
         composeTestRule.onNodeWithTag("city_item_Artvin").performClick()
         composeTestRule.onNodeWithTag("save_selection").performClick()
 
-        assert(selectedCity == "Artvin")
+        assertTrue(selectedCity == "Artvin")
     }
 }

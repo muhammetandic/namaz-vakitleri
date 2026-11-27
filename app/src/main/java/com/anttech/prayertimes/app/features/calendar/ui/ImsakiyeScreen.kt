@@ -168,7 +168,7 @@ private fun ImsakiyeContent(
                 nonFastedRamadanDays = state.nonFastedRamadanDays,
                 fastedNonRamadanDays = state.fastedNonRamadanDays,
                 onToggleDay = { day ->
-                    onIntent(ImsakiyeIntent.ToggleTrackedDay(
+                    onIntent(ImsakiyeIntent.ToggleFastedDay(
                         date = day.date,
                         hijriDay = day.hijriDay,
                         hijriMonth = day.hijriMonth,
@@ -269,8 +269,8 @@ private fun TodayImsakiyeCard(
                         Icon(
                             imageVector = if (today.isFasted) Icons.Default.CheckCircle else Icons.Default.NightsStay,
                             contentDescription = when {
-                                today.hijriMonth == 9 && today.isFasted -> "Kazaya kaldı olarak işaretli"
-                                today.hijriMonth == 9 -> "Kaza olarak işaretle"
+                                today.hijriMonth == 9 && today.isFasted -> "Ramazan orucu tutulmadı olarak işaretli"
+                                today.hijriMonth == 9 -> "Ramazan orucu tutulmadı olarak işaretle"
                                 today.isFasted -> "Nafile oruç işaretli"
                                 else -> "Oruç işaretle"
                             },
@@ -280,8 +280,8 @@ private fun TodayImsakiyeCard(
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = when {
-                                today.hijriMonth == 9 && today.isFasted -> "Kazaya kaldı"
-                                today.hijriMonth == 9 -> "Kaza işaretle"
+                                today.hijriMonth == 9 && today.isFasted -> "Tutulmadı"
+                                today.hijriMonth == 9 -> "Tutulmadı işaretle"
                                 today.isFasted -> "Nafile oruç"
                                 else -> "Oruç işaretle"
                             },
@@ -458,10 +458,10 @@ private fun FastTrackingCard(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    // Kaza count chip - only when there are kaza days
+                    // Tutulmayan Ramazan günü sayacı - yalnızca kayıt varsa
                     if (nonFastedRamadanDays.isNotEmpty()) {
                         TrackingCountChip(
-                            text = "Kazaya kaldı ${nonFastedRamadanDays.size}",
+                            text = "Tutulmadı ${nonFastedRamadanDays.size}",
                             containerColor = MaterialTheme.colorScheme.errorContainer,
                             contentColor = MaterialTheme.colorScheme.onErrorContainer,
                             scale = scale
@@ -481,16 +481,16 @@ private fun FastTrackingCard(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Section: Ramadan kaza days (red)
+            // Bölüm: Ramazan orucu tutulmayan günler (kırmızı)
             if (nonFastedRamadanDays.isNotEmpty()) {
-                SectionTitle(text = "${nonFastedRamadanDays.size} kaza", modifier = Modifier.padding(start = 4.dp, bottom = 4.dp).fillMaxWidth())
+                SectionTitle(text = "${nonFastedRamadanDays.size} tutulmadı", modifier = Modifier.padding(start = 4.dp, bottom = 4.dp).fillMaxWidth())
                 nonFastedRamadanDays.forEach { day ->
                     TrackingRow(
                         day = day,
                         scale = scale,
                         containerColor = MaterialTheme.colorScheme.errorContainer,
                         contentColor = MaterialTheme.colorScheme.onErrorContainer,
-                        badgeText = "Kazaya kaldı",
+                        badgeText = "Tutulmadı",
                         badgeColor = MaterialTheme.colorScheme.error,
                         onClick = { onToggleDay(day) }
                     )

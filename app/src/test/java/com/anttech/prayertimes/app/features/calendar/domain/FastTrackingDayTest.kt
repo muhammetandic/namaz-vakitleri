@@ -7,7 +7,7 @@ import java.time.LocalDate
 class FastTrackingDayTest {
 
     @Test
-    fun `ramadan non-fasted day shows kaza label`() {
+    fun `ramadan non-fasted day shows tutulmadı label`() {
         val day = FastTrackingDay(
             date = LocalDate.of(2026, 3, 15),
             hijriDay = 15,
@@ -22,7 +22,7 @@ class FastTrackingDayTest {
         assertThat(day.isRamadan).isTrue()
         assertThat(day.isNonFastedRamadan).isTrue()
         assertThat(day.isFastedNonRamadan).isFalse()
-        assertThat(day.displayText).contains("(kaza)")
+        assertThat(day.displayText).contains("tutulmadı")
     }
 
     @Test

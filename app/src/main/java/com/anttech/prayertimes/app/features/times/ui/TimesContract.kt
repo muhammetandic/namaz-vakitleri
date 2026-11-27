@@ -26,10 +26,10 @@ sealed interface TimesIntent {
     object UseLocation : TimesIntent
     object TickSecond : TimesIntent
     object ToggleSimpleMode : TimesIntent
+    data class SetFontScale(val scale: Float) : TimesIntent
     object RefreshLocation : TimesIntent
 }
 
 sealed interface TimesUiEffect {
     data class ShowToast(val message: String) : TimesUiEffect
-    data class PlayAdhanNotification(val prayerType: PrayerType) : TimesUiEffect
 }

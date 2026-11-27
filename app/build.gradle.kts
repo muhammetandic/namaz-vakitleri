@@ -21,7 +21,8 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -38,6 +39,10 @@ android {
     testOptions {
         unitTests.isReturnDefaultValues = true
     }
+    sourceSets {
+        // Room'un dışa aktardığı şema dosyaları migration testlerinde kullanılır.
+        getByName("androidTest").assets.srcDir("$projectDir/schemas")
+    }
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -45,6 +50,11 @@ android {
             excludes += "META-INF/LICENSE-notice.md"
         }
     }
+}
+
+ksp {
+    // Room şema dosyaları migration testleri için app/schemas altına yazılır.
+    arg("room.schemaLocation", "$projectDir/schemas")
 }
 
 dependencies {

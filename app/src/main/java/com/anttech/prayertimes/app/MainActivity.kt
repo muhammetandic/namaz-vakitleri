@@ -1,9 +1,11 @@
 package com.anttech.prayertimes
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -13,30 +15,38 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import com.anttech.prayertimes.core.ui.theme.NamazVakitleriTheme
-import com.anttech.prayertimes.features.qibla.ui.QiblaIntent
+import com.anttech.prayertimes.features.calendar.ui.ImsakiyeUiEffect
+import com.anttech.prayertimes.features.calendar.ui.ImsakiyeViewModel
 import com.anttech.prayertimes.features.qibla.ui.QiblaViewModel
+import com.anttech.prayertimes.features.settings.ui.NotificationSettingsUiEffect
 import com.anttech.prayertimes.features.settings.ui.NotificationSettingsViewModel
+import com.anttech.prayertimes.features.settings.ui.SoundSettingsUiEffect
 import com.anttech.prayertimes.features.settings.ui.SoundSettingsViewModel
-import com.anttech.prayertimes.features.times.ui.TimesIntent
 import com.anttech.prayertimes.features.times.data.SmartSyncScheduler
+import com.anttech.prayertimes.features.times.ui.TimesIntent
+import com.anttech.prayertimes.features.times.ui.TimesUiEffect
 import com.anttech.prayertimes.features.times.ui.TimesViewModel
-import javax.inject.Inject
 import com.anttech.prayertimes.features.tracker.ui.TrackerViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     private val timesViewModel: TimesViewModel by viewModels()
-    private val imsakiyeViewModel: com.anttech.prayertimes.features.calendar.ui.ImsakiyeViewModel by viewModels()
+    private val imsakiyeViewModel: ImsakiyeViewModel by viewModels()
     private val qiblaViewModel: QiblaViewModel by viewModels()
     private val trackerViewModel: TrackerViewModel by viewModels()
     private val soundSettingsViewModel: SoundSettingsViewModel by viewModels()
@@ -97,48 +107,106 @@ class MainActivity : ComponentActivity() {
             notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
 
+        collectUiEffects()
+
         setContent {
             NamazVakitleriTheme(darkTheme = androidx.compose.foundation.isSystemInDarkTheme()) {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    val timesState by timesViewModel.uiState.collectAsState()
-                    val imsakiyeState by imsakiyeViewModel.uiState.collectAsState()
-                    val qiblaState by qiblaViewModel.uiState.collectAsState()
-                    val trackerState by trackerViewModel.uiState.collectAsState()
-                    val soundState by soundSettingsViewModel.uiState.collectAsState()
-                    val notificationState by notificationSettingsViewModel.uiState.collectAsState()
-
-                    // Saniye saniye geri sayım yenileme döngüsü ve konum başlatma
+                    // Konum yalnızca ilk açılışta bir kez çözülür.
                     LaunchedEffect(Unit) {
                         timesViewModel.sendIntent(TimesIntent.RefreshLocation)
-                        while (true) {
-                            delay(1000L)
-                            timesViewModel.sendIntent(TimesIntent.TickSecond)
+                    }
+
+                    // Saniyelik geri sayım yalnızca ekran görünürken çalışır.
+                    LaunchedEffect(Unit) {
+                        lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                            while (true) {
+                                delay(1_000L)
+                                timesViewModel.sendIntent(TimesIntent.TickSecond)
+                            }
                         }
                     }
 
-                    // İmsakiye seçili şehri takip etsin (elle seçimde yeniden yüklensin)
-                    LaunchedEffect(timesState.city) {
+                    // İmsakiye seçili şehri takip etsin (elle seçimde yeniden yüklensin).
+                    // Yalnızca şehir değişimi dinlenir; saniyelik sayaç bu efekti tetiklemez.
+                    val city by timesViewModel.uiState
+                        .map { it.city }
+                        .distinctUntilChanged()
+                        .collectAsStateWithLifecycle(timesViewModel.uiState.value.city)
+                    LaunchedEffect(city) {
                         val yearMonth = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM").format(java.time.LocalDate.now())
-                        imsakiyeViewModel.sendIntent(com.anttech.prayertimes.features.calendar.ui.ImsakiyeIntent.LoadImsakiye(timesState.city, yearMonth))
+                        imsakiyeViewModel.sendIntent(com.anttech.prayertimes.features.calendar.ui.ImsakiyeIntent.LoadImsakiye(city, yearMonth))
                     }
 
                     MainAppScaffold(
-                        timesState = timesState,
+                        timesStateFlow = timesViewModel.uiState,
                         onTimesIntent = timesViewModel::sendIntent,
-                        imsakiyeState = imsakiyeState,
+                        imsakiyeStateFlow = imsakiyeViewModel.uiState,
                         onImsakiyeIntent = imsakiyeViewModel::sendIntent,
-                        qiblaState = qiblaState,
+                        qiblaStateFlow = qiblaViewModel.uiState,
                         onQiblaIntent = qiblaViewModel::sendIntent,
-                        trackerState = trackerState,
+                        trackerStateFlow = trackerViewModel.uiState,
                         onTrackerIntent = trackerViewModel::sendIntent,
-                        soundState = soundState,
+                        soundStateFlow = soundSettingsViewModel.uiState,
                         onSoundIntent = soundSettingsViewModel::sendIntent,
-                        notificationState = notificationState,
+                        notificationStateFlow = notificationSettingsViewModel.uiState,
                         onNotificationIntent = notificationSettingsViewModel::sendIntent
                     )
                 }
             }
         }
+    }
+
+    /**
+     * Tek seferlik olayları (toast, paylaşım) Activity yaşam döngüsüne bağlı olarak
+     * toplar. Ekran görünür değilken biriken olaylar görünür olunca işlenir.
+     */
+    private fun collectUiEffects() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    timesViewModel.effect.collect { effect ->
+                        when (effect) {
+                            is TimesUiEffect.ShowToast -> showToast(effect.message)
+                        }
+                    }
+                }
+                launch {
+                    imsakiyeViewModel.effect.collect { effect ->
+                        when (effect) {
+                            is ImsakiyeUiEffect.ShowMessage -> showToast(effect.message)
+                            is ImsakiyeUiEffect.ShareText -> shareText(effect.content)
+                        }
+                    }
+                }
+                launch {
+                    soundSettingsViewModel.effect.collect { effect ->
+                        when (effect) {
+                            is SoundSettingsUiEffect.ShowToast -> showToast(effect.message)
+                        }
+                    }
+                }
+                launch {
+                    notificationSettingsViewModel.effect.collect { effect ->
+                        when (effect) {
+                            is NotificationSettingsUiEffect.ShowToast -> showToast(effect.message)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun showToast(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    }
+
+    private fun shareText(content: String) {
+        val sendIntent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_TEXT, content)
+        }
+        startActivity(Intent.createChooser(sendIntent, "İmsakiyeyi paylaş"))
     }
 
     override fun onKeyDown(keyCode: Int, event: android.view.KeyEvent?): Boolean {
@@ -149,7 +217,7 @@ class MainActivity : ComponentActivity() {
                 return true
             }
             // Arka planda ezan çalıyorsa durdur
-            val stopIntent = android.content.Intent(this, com.anttech.prayertimes.core.notifications.AdhanPlaybackService::class.java).apply {
+            val stopIntent = Intent(this, com.anttech.prayertimes.core.notifications.AdhanPlaybackService::class.java).apply {
                 action = com.anttech.prayertimes.core.notifications.AdhanPlaybackService.ACTION_STOP
             }
             startService(stopIntent)

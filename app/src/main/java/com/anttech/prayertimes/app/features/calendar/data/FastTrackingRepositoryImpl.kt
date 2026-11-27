@@ -1,5 +1,6 @@
 package com.anttech.prayertimes.features.calendar.data
 
+import com.anttech.prayertimes.core.common.hijriMonthName as hijriMonthNameFor
 import com.anttech.prayertimes.core.database.FastTrackingDao
 import com.anttech.prayertimes.core.database.FastTrackingEntity
 import com.anttech.prayertimes.features.calendar.domain.FastTrackingDay
@@ -90,19 +91,12 @@ class FastTrackingRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun markForbiddenDays(city: String, year: Int) {
-        withContext(Dispatchers.IO) {
-            // This is a placeholder - in reality we'd calculate Eid dates
-            // For now, we'll rely on the API providing hijri dates to identify forbidden days
-        }
-    }
-
     private fun FastTrackingEntity.toDomainModel(): FastTrackingDay {
         return FastTrackingDay(
             date = LocalDate.parse(date, dateFormatter),
             hijriDay = hijriDay,
             hijriMonth = hijriMonth,
-            hijriMonthName = if (hijriMonthName.isNotBlank()) hijriMonthName else hijriMonthName(hijriMonth),
+            hijriMonthName = if (hijriMonthName.isNotBlank()) hijriMonthName else hijriMonthNameFor(hijriMonth),
             hijriYear = hijriYear,
             isMarked = isMarked,
             isForbidden = isForbidden,
@@ -110,19 +104,4 @@ class FastTrackingRepositoryImpl @Inject constructor(
         )
     }
 
-    private fun hijriMonthName(month: Int): String = when (month) {
-        1 -> "Muharrem"
-        2 -> "Safer"
-        3 -> "Rebiülevvel"
-        4 -> "Rebiülahir"
-        5 -> "Cemaziyelevvel"
-        6 -> "Cemaziyelahir"
-        7 -> "Recep"
-        8 -> "Şaban"
-        9 -> "Ramazan"
-        10 -> "Şevval"
-        11 -> "Zilkade"
-        12 -> "Zilhicce"
-        else -> ""
-    }
 }

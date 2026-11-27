@@ -18,12 +18,12 @@ interface PrayerTimeDao {
     @Query("SELECT * FROM prayer_times WHERE city = :city AND date LIKE :yearMonth || '%' ORDER BY date ASC")
     fun getMonthlyTimes(city: String, yearMonth: String): Flow<List<PrayerTimeEntity>>
 
+    @Query("SELECT * FROM prayer_times WHERE city = :city AND date >= :startDate AND date <= :endDate ORDER BY date ASC")
+    suspend fun getTimesBetween(city: String, startDate: String, endDate: String): List<PrayerTimeEntity>
+
     @Query("SELECT COUNT(*) FROM prayer_times WHERE city = :city AND date LIKE :yearMonth || '%'")
     suspend fun countMonthlyTimes(city: String, yearMonth: String): Int
 
     @Query("SELECT city FROM prayer_times ORDER BY date DESC LIMIT 1")
     suspend fun getLastUsedCity(): String?
-
-    @Query("DELETE FROM prayer_times WHERE date < :beforeDate")
-    suspend fun deleteOldTimes(beforeDate: String)
 }

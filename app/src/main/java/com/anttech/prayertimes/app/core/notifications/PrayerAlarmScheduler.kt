@@ -55,10 +55,10 @@ class PrayerAlarmScheduler(
     private val repository: TimesRepository,
     private val alarmScheduler: AlarmScheduler,
     private val lastCityStore: LastCityStore,
-    private val notificationPreferences: NotificationPreferencesRepository? = null,
-    private val fastingAlarmPreferences: FastingAlarmPreferencesRepository? = null,
-    private val daysAhead: Int = 62,
-    private val hasActiveWidgets: suspend () -> Boolean = { false }
+    private val notificationPreferences: NotificationPreferencesRepository,
+    private val fastingAlarmPreferences: FastingAlarmPreferencesRepository,
+    private val hasActiveWidgets: suspend () -> Boolean,
+    private val daysAhead: Int = 62
 ) {
 
     suspend fun scheduleUpcoming(city: String) {
@@ -70,9 +70,9 @@ class PrayerAlarmScheduler(
         }
         val sahurMinutesBefore = sahurAlarmMinutesBefore()
         val start = LocalDate.now()
-        for (offset in 0 until daysAhead) {
-            val date = start.plusDays(offset.toLong())
-            val times = repository.getPrayerTimesForDate(city, date).firstOrNull() ?: continue
+        val end = start.plusDays(daysAhead.toLong() - 1)
+        // Tek sorgu: gün gün veritabanına gitmek yerine aralığı bir kez oku.
+        repository.getPrayerTimesBetween(city, start, end).forEach { times ->
             scheduleDay(times, sahurMinutesBefore)
         }
     }
@@ -87,14 +87,13 @@ class PrayerAlarmScheduler(
         notificationsEnabled() || hasActiveWidgets() || sahurAlarmMinutesBefore() != null
 
     private suspend fun notificationsEnabled(): Boolean {
-        return notificationPreferences?.notificationsEnabled?.first() ?: true
+        return notificationPreferences.notificationsEnabled.first()
     }
 
     /** Sahur alarmı açıksa imsaktan kaç dakika önce kurulacağını döner. */
     private suspend fun sahurAlarmMinutesBefore(): Int? {
-        val preferences = fastingAlarmPreferences ?: return null
-        if (!preferences.sahurAlarmEnabled.first()) return null
-        return preferences.sahurAlarmMinutesBefore.first()
+        if (!fastingAlarmPreferences.sahurAlarmEnabled.first()) return null
+        return fastingAlarmPreferences.sahurAlarmMinutesBefore.first()
     }
 
     private fun cancelScheduled() {

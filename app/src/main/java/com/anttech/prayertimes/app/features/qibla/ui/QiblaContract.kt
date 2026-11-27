@@ -25,7 +25,3 @@ sealed interface QiblaIntent {
     data class OnAzimuthChanged(val azimuth: Float) : QiblaIntent
     data class SetDisplayMode(val mode: QiblaDisplayMode) : QiblaIntent
 }
-
-sealed interface QiblaUiEffect {
-    object TriggerVibration : QiblaUiEffect
-}

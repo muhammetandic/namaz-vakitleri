@@ -27,11 +27,7 @@ class Media3AudioPlayerManager(
 
         val mediaItem = when (soundOption) {
             is SoundOption.BuiltIn -> {
-                val resId = context.resources.getIdentifier(
-                    soundOption.resName,
-                    "raw",
-                    context.packageName
-                )
+                val resId = rawSoundResId(soundOption.resName)
                 if (resId == 0) {
                     onFinished()
                     return

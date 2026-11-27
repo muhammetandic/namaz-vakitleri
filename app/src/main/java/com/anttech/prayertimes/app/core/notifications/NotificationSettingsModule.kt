@@ -21,12 +21,4 @@ object NotificationSettingsModule {
     ): NotificationPreferencesRepository {
         return DataStoreNotificationPreferencesRepository(context)
     }
-
-    @Provides
-    @Singleton
-    fun provideTestNotificationSender(
-        sender: AndroidTestNotificationSender
-    ): TestNotificationSender {
-        return sender
-    }
 }

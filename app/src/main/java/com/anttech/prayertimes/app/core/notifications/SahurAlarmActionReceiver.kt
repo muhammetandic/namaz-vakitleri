@@ -1,15 +1,9 @@
 package com.anttech.prayertimes.core.notifications
 
-import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.os.Build
-import androidx.core.app.NotificationCompat
-import com.anttech.prayertimes.MainActivity
-import com.anttech.prayertimes.features.settings.domain.SoundPreferencesRepository
 import com.anttech.prayertimes.features.times.domain.PrayerType
 import com.anttech.prayertimes.core.notifications.AlarmScheduler
 import com.anttech.prayertimes.core.notifications.AlarmItem
@@ -19,7 +13,6 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import javax.inject.Inject
@@ -30,9 +23,6 @@ import javax.inject.Inject
  */
 @AndroidEntryPoint
 class SahurAlarmActionReceiver : BroadcastReceiver() {
-
-    @Inject
-    lateinit var soundPreferencesRepository: SoundPreferencesRepository
 
     @Inject
     lateinit var alarmScheduler: AlarmScheduler
@@ -56,27 +46,31 @@ class SahurAlarmActionReceiver : BroadcastReceiver() {
         val prayerTypeName = intent.getStringExtra(EXTRA_PRAYER_TYPE)
         val title = intent.getStringExtra(EXTRA_TITLE) ?: "Sahur Uyandırma"
         val message = intent.getStringExtra(EXTRA_MESSAGE) ?: "İmsak vakti yaklaştı"
-        val originalTriggerStr = intent.getStringExtra(EXTRA_ORIGINAL_TRIGGER)
 
         if (alarmId == -1 || action == null) return
 
+        val pendingResult = goAsync()
         CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
-            when (action) {
-                ACTION_STOP -> {
-                    // Durdur: Ses servisini durdur, tekrar kurma
-                    stopSahurPlayback(context)
-                    // Bildirimi kapat
-                    cancelNotification(context, alarmId)
+            try {
+                when (action) {
+                    ACTION_STOP -> {
+                        // Durdur: Ses servisini durdur, tekrar kurma
+                        stopSahurPlayback(context)
+                        // Bildirimi kapat
+                        cancelNotification(context, alarmId)
+                    }
+                    ACTION_SNOOZE -> {
+                        // Ertele: Mevcut çalmayı durdur, 5 dakika sonra yeni alarm kur
+                        stopSahurPlayback(context)
+                        cancelNotification(context, alarmId)
+                        scheduleSnoozeAlarm(prayerTypeName, title, message)
+                    }
                 }
-                ACTION_SNOOZE -> {
-                    // Ertele: Mevcut çalmayı durdur, 5 dakika sonra yeni alarm kur
-                    stopSahurPlayback(context)
-                    cancelNotification(context, alarmId)
-                    scheduleSnoozeAlarm(context, prayerTypeName, title, message, originalTriggerStr)
-                }
+                // Widget güncelle
+                widgetUpdater.updateAll()
+            } finally {
+                pendingResult.finish()
             }
-            // Widget güncelle
-            widgetUpdater.updateAll()
         }
     }
 
@@ -97,11 +91,9 @@ class SahurAlarmActionReceiver : BroadcastReceiver() {
     }
 
     private suspend fun scheduleSnoozeAlarm(
-        context: Context,
         prayerTypeName: String?,
         title: String,
-        message: String,
-        originalTriggerStr: String?
+        message: String
     ) {
         val prayerType = prayerTypeName?.let { name ->
             PrayerType.entries.firstOrNull { it.name == name }
@@ -109,10 +101,6 @@ class SahurAlarmActionReceiver : BroadcastReceiver() {
 
         // 5 dakika sonra tetikle
         val snoozeTrigger = LocalDateTime.now().plusMinutes(5)
-
-        // Orijinal sesi çöz
-        val sound = soundPreferencesRepository.getSahurAlarmSound().first()
-            ?: soundPreferencesRepository.getSoundForPrayer(prayerType).first()
 
         alarmScheduler.schedule(
             AlarmItem(

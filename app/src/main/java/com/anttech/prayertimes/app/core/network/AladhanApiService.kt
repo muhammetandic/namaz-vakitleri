@@ -80,16 +80,4 @@ interface AladhanApiService {
         @Query("country") country: String = "Turkey",
         @Query("method") method: Int = 13
     ): AladhanResponse
-
-    /**
-     * GPS koordinatları ile aylık namaz takvimini çeker.
-     */
-    @GET("v1/calendar/{year}/{month}")
-    suspend fun getMonthlyCalendarByCoordinates(
-        @Path("year") year: Int,
-        @Path("month") month: Int,
-        @Query("latitude") latitude: Double,
-        @Query("longitude") longitude: Double,
-        @Query("method") method: Int = 13
-    ): AladhanResponse
 }

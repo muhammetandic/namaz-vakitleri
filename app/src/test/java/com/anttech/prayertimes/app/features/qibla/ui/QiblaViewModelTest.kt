@@ -69,28 +69,6 @@ class QiblaViewModelTest {
     }
 
     @Test
-    fun `when aligned with Qibla, TriggerVibration effect is fired`() = runTest {
-        val lat = 41.0082
-        val lng = 28.9784
-        // Exactly aligned azimuth
-        every { compassSensorManager.isSensorAvailable() } returns true
-        every { compassSensorManager.getAzimuthFlow() } returns flowOf(151.7f)
-
-        val viewModel = QiblaViewModel(
-            compassSensorManager = compassSensorManager,
-            calculateQiblaAngleUseCase = calculateQiblaAngleUseCase
-        )
-
-        viewModel.effect.test {
-            viewModel.sendIntent(QiblaIntent.StartCompass(lat, lng, "İstanbul"))
-            testDispatcher.scheduler.advanceUntilIdle()
-
-            val effect = awaitItem()
-            assertThat(effect).isEqualTo(QiblaUiEffect.TriggerVibration)
-        }
-    }
-
-    @Test
     fun `when StopCompass intent is sent, azimuth flow collection is cancelled`() = runTest {
         val azimuthUpdates = MutableStateFlow(0f)
         var collecting = false

@@ -1,5 +1,7 @@
 package com.anttech.prayertimes.features.settings.ui
 
+import com.anttech.prayertimes.core.notifications.rawSoundResId
+
 import android.content.Intent
 import android.net.Uri
 import android.provider.OpenableColumns
@@ -807,7 +809,7 @@ private fun PreviewPlayButton(
 }
 
 private fun SoundOption.isPreviewable(context: android.content.Context): Boolean = when (this) {
-    is SoundOption.BuiltIn -> context.resources.getIdentifier(resName, "raw", context.packageName) != 0
+    is SoundOption.BuiltIn -> rawSoundResId(resName) != 0
     is SoundOption.CustomFile -> true
     SoundOption.Silent, SoundOption.VibrateOnly -> false
 }

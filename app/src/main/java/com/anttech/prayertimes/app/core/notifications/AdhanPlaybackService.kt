@@ -36,6 +36,8 @@ class AdhanPlaybackService : Service() {
     private var player: ExoPlayer? = null
     private var playbackIntent: Intent? = null
     private var volumeChangeReceiver: BroadcastReceiver? = null
+    private var notificationId: Int = NOTIFICATION_ID
+    private var hasForegroundNotification = false
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -56,7 +58,18 @@ class AdhanPlaybackService : Service() {
         val volume = intent.getFloatExtra(EXTRA_VOLUME, 0.8f).coerceIn(0f, 1f)
         playbackIntent = intent
 
-        startForeground(NOTIFICATION_ID, buildNotification(title))
+        // Bildirim kimliği alarm kimliğinden türetilir; böylece farklı vakitlerin
+        // "ses çalıyor" bildirimi birbirinin üzerine yazmaz ve metin bildirimleriyle
+        // (alarm kimlikleri) çakışmaz.
+        val alarmId = intent.getIntExtra(EXTRA_ALARM_ID, 0)
+        val newNotificationId = PLAYBACK_NOTIFICATION_BASE + (alarmId % PLAYBACK_NOTIFICATION_RANGE)
+        if (newNotificationId != notificationId && hasForegroundNotification) {
+            stopForeground(STOP_FOREGROUND_REMOVE)
+        }
+        notificationId = newNotificationId
+
+        startForeground(notificationId, buildNotification(title))
+        hasForegroundNotification = true
         play(uri, volume)
 
         return START_NOT_STICKY
@@ -135,7 +148,7 @@ class AdhanPlaybackService : Service() {
                 this,
                 receiver,
                 filter,
-                ContextCompat.RECEIVER_EXPORTED
+                ContextCompat.RECEIVER_NOT_EXPORTED
             )
             volumeChangeReceiver = receiver
         } catch (_: Exception) {}
@@ -202,6 +215,10 @@ class AdhanPlaybackService : Service() {
 
     override fun onDestroy() {
         stopPlayback()
+        if (hasForegroundNotification) {
+            stopForeground(STOP_FOREGROUND_REMOVE)
+            hasForegroundNotification = false
+        }
         super.onDestroy()
     }
 
@@ -214,6 +231,9 @@ class AdhanPlaybackService : Service() {
         const val EXTRA_ALARM_ID = "extra_alarm_id"
         const val EXTRA_VIBRATION_ENABLED = "extra_vibration_enabled"
         private const val CHANNEL_ID = "adhan_playback_v1"
-        private const val NOTIFICATION_ID = 4712
+        /** Vakit alarm kimlikleri bu aralığın altında kalır (~20 bin). */
+        private const val PLAYBACK_NOTIFICATION_BASE = 1_000_000
+        private const val PLAYBACK_NOTIFICATION_RANGE = 100_000
+        private const val NOTIFICATION_ID = PLAYBACK_NOTIFICATION_BASE
     }
 }

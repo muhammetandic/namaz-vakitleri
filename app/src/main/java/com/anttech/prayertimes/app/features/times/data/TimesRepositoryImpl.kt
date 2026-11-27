@@ -1,5 +1,6 @@
 package com.anttech.prayertimes.features.times.data
 
+import com.anttech.prayertimes.core.common.hijriMonthName as hijriMonthNameFor
 import com.anttech.prayertimes.core.database.PrayerTimeDao
 import com.anttech.prayertimes.core.database.PrayerTimeEntity
 import com.anttech.prayertimes.core.network.AladhanApiService
@@ -30,6 +31,19 @@ class TimesRepositoryImpl(
         return dao.getMonthlyTimes(city, yearMonth).map { list ->
             list.map { it.toDomainModel() }
         }
+    }
+
+    override suspend fun getPrayerTimesBetween(
+        city: String,
+        start: LocalDate,
+        end: LocalDate
+    ): List<PrayerTimes> {
+        val formatter = DateTimeFormatter.ISO_LOCAL_DATE
+        return dao.getTimesBetween(
+            city = city,
+            startDate = start.format(formatter),
+            endDate = end.format(formatter)
+        ).map { it.toDomainModel() }
     }
 
     override suspend fun syncMonthlyPrayerTimes(city: String): Result<Unit> {
@@ -91,7 +105,7 @@ class TimesRepositoryImpl(
         val hijri = date.hijri
         val hijriDay = hijri?.day?.toInt() ?: 1
         val hijriMonth = hijri?.month?.number ?: 1
-        val hijriMonthName = hijriMonthTurkish(hijriMonth)
+        val hijriMonthName = hijriMonthNameFor(hijriMonth)
         val hijriYear = hijri?.year?.toInt() ?: 1448
 
         return PrayerTimeEntity(
@@ -130,21 +144,6 @@ class TimesRepositoryImpl(
         )
     }
 
-    private fun hijriMonthTurkish(month: Int): String = when (month) {
-        1 -> "Muharrem"
-        2 -> "Safer"
-        3 -> "Rebiülevvel"
-        4 -> "Rebiülahir"
-        5 -> "Cemaziyelevvel"
-        6 -> "Cemaziyelahir"
-        7 -> "Recep"
-        8 -> "Şaban"
-        9 -> "Ramazan"
-        10 -> "Şevval"
-        11 -> "Zilkade"
-        12 -> "Zilhicce"
-        else -> ""
-    }
 
     private fun cleanTimeString(raw: String): String {
         // "05:45 (EET)" -> "05:45"

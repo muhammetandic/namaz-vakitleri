@@ -6,6 +6,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import android.content.Context
+import android.content.pm.ApplicationInfo
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -21,15 +22,21 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(): OkHttpClient {
-        val loggingInterceptor = HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
-        }
-        return OkHttpClient.Builder()
-            .addInterceptor(loggingInterceptor)
+    fun provideOkHttpClient(@ApplicationContext context: Context): OkHttpClient {
+        val builder = OkHttpClient.Builder()
             .connectTimeout(15, TimeUnit.SECONDS)
             .readTimeout(15, TimeUnit.SECONDS)
-            .build()
+
+        // Ağ günlükleri yalnızca debuggable derlemede ve yalnızca özet düzeyde.
+        val isDebuggable = (context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
+        if (isDebuggable) {
+            builder.addInterceptor(
+                HttpLoggingInterceptor().apply {
+                    level = HttpLoggingInterceptor.Level.BASIC
+                }
+            )
+        }
+        return builder.build()
     }
 
     @Provides
