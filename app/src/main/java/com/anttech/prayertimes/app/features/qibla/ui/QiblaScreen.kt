@@ -11,8 +11,10 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Info
@@ -72,75 +74,78 @@ fun QiblaScreen(
 
     Scaffold(
         topBar = {
-            if (wrapInScaffold) {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Kıble Pusulası",
-                        fontSize = (20 * fontScale).sp,
-                        fontWeight = FontWeight.Bold
+            Column {
+                if (wrapInScaffold) {
+                    TopAppBar(
+                        title = {
+                            Text(
+                                text = "Kıble Pusulası",
+                                fontSize = (20 * fontScale).sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        },
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = MaterialTheme.colorScheme.surface
+                        )
                     )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
-            )
+                }
+                // Tab satırı topBar içinde → native MapView'ın üzerinde kalır
+                PrimaryTabRow(
+                    selectedTabIndex = if (state.displayMode == QiblaDisplayMode.COMPASS) 0 else 1,
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    contentColor = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("qibla_mode_tabs")
+                ) {
+                    Tab(
+                        selected = state.displayMode == QiblaDisplayMode.COMPASS,
+                        onClick = { onIntent(QiblaIntent.SetDisplayMode(QiblaDisplayMode.COMPASS)) },
+                        text = {
+                            Text(
+                                text = "Pusula",
+                                fontSize = (15 * fontScale).sp,
+                                fontWeight = if (state.displayMode == QiblaDisplayMode.COMPASS) FontWeight.Bold else FontWeight.Normal
+                            )
+                        },
+                        modifier = Modifier.testTag("tab_qibla_compass")
+                    )
+                    Tab(
+                        selected = state.displayMode == QiblaDisplayMode.MAP,
+                        onClick = { onIntent(QiblaIntent.SetDisplayMode(QiblaDisplayMode.MAP)) },
+                        text = {
+                            Text(
+                                text = "Harita",
+                                fontSize = (15 * fontScale).sp,
+                                fontWeight = if (state.displayMode == QiblaDisplayMode.MAP) FontWeight.Bold else FontWeight.Normal
+                            )
+                        },
+                        modifier = Modifier.testTag("tab_qibla_map")
+                    )
+                }
             }
         },
         contentWindowInsets = if (wrapInScaffold) { ScaffoldDefaults.contentWindowInsets } else { WindowInsets(0, 0, 0, 0) },
         modifier = modifier.fillMaxSize()
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) {
-            // Mod Değiştirici: Pusula | Harita
-            PrimaryTabRow(
-                selectedTabIndex = if (state.displayMode == QiblaDisplayMode.COMPASS) 0 else 1,
-                containerColor = MaterialTheme.colorScheme.surface,
-                contentColor = MaterialTheme.colorScheme.primary,
+        when (state.displayMode) {
+            QiblaDisplayMode.COMPASS -> CompassContent(
+                state = state,
+                fontScale = fontScale,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("qibla_mode_tabs")
-            ) {
-                Tab(
-                    selected = state.displayMode == QiblaDisplayMode.COMPASS,
-                    onClick = { onIntent(QiblaIntent.SetDisplayMode(QiblaDisplayMode.COMPASS)) },
-                    text = {
-                        Text(
-                            text = "Pusula",
-                            fontSize = (15 * fontScale).sp,
-                            fontWeight = if (state.displayMode == QiblaDisplayMode.COMPASS) FontWeight.Bold else FontWeight.Normal
-                        )
-                    },
-                    modifier = Modifier.testTag("tab_qibla_compass")
-                )
-                Tab(
-                    selected = state.displayMode == QiblaDisplayMode.MAP,
-                    onClick = { onIntent(QiblaIntent.SetDisplayMode(QiblaDisplayMode.MAP)) },
-                    text = {
-                        Text(
-                            text = "Harita",
-                            fontSize = (15 * fontScale).sp,
-                            fontWeight = if (state.displayMode == QiblaDisplayMode.MAP) FontWeight.Bold else FontWeight.Normal
-                        )
-                    },
-                    modifier = Modifier.testTag("tab_qibla_map")
-                )
-            }
-
-            when (state.displayMode) {
-                QiblaDisplayMode.COMPASS -> CompassContent(state = state, fontScale = fontScale)
-                QiblaDisplayMode.MAP -> QiblaMapContent(
-                    userLat = state.userLatitude ?: 41.0082,
-                    userLng = state.userLongitude ?: 28.9784,
-                    cityName = state.cityName,
-                    qiblaBearing = state.qiblaBearing,
-                    fontScale = fontScale,
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
+                    .fillMaxSize()
+                    .padding(innerPadding)
+            )
+            QiblaDisplayMode.MAP -> QiblaMapContent(
+                userLat = state.userLatitude ?: 41.0082,
+                userLng = state.userLongitude ?: 28.9784,
+                cityName = state.cityName,
+                qiblaBearing = state.qiblaBearing,
+                fontScale = fontScale,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+            )
         }
     }
 }
@@ -148,14 +153,15 @@ fun QiblaScreen(
 @Composable
 private fun CompassContent(
     state: QiblaUiState,
-    fontScale: Float
+    fontScale: Float,
+    modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(20.dp),
+        modifier = modifier
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 20.dp, vertical = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.SpaceBetween
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // Üst Bilgi Kartı (Açı ve Şehir)
         Card(
@@ -300,7 +306,6 @@ private fun CompassContent(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 12.dp)
         ) {
             Icon(
                 imageVector = Icons.Default.Info,

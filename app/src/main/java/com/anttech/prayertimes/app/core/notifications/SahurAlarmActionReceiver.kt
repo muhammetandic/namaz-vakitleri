@@ -4,6 +4,7 @@ import android.app.NotificationManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import com.anttech.prayertimes.features.times.domain.PrayerType
 import com.anttech.prayertimes.core.notifications.AlarmScheduler
 import com.anttech.prayertimes.core.notifications.AlarmItem
@@ -68,6 +69,8 @@ class SahurAlarmActionReceiver : BroadcastReceiver() {
                 }
                 // Widget güncelle
                 widgetUpdater.updateAll()
+            } catch (exception: Exception) {
+                Log.e("SahurAlarmActionReceiver", "Alarm action failed", exception)
             } finally {
                 pendingResult.finish()
             }

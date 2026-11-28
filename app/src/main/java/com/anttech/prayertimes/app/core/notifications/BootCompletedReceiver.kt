@@ -3,6 +3,7 @@ package com.anttech.prayertimes.core.notifications
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import dagger.hilt.android.AndroidEntryPoint
 import com.anttech.prayertimes.features.widget.WidgetUpdater
 import kotlinx.coroutines.CoroutineScope
@@ -39,6 +40,8 @@ class BootCompletedReceiver : BroadcastReceiver() {
                     // Widget'lar da yeniden başlatma sonrası taze veriyle çizilsin.
                     widgetUpdater.updateAll()
                 }
+            } catch (exception: Exception) {
+                Log.e("BootCompletedReceiver", "Alarm rescheduling failed", exception)
             } finally {
                 pendingResult.finish()
             }

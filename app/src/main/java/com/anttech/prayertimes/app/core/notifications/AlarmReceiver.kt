@@ -10,6 +10,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.anttech.prayertimes.MainActivity
@@ -69,6 +70,8 @@ class AlarmReceiver : BroadcastReceiver() {
                     // Vakit değişti: ana ekran widget'larını yenile.
                     widgetUpdater.updateAll()
                 }
+            } catch (exception: Exception) {
+                Log.e("AlarmReceiver", "Alarm handling failed", exception)
             } finally {
                 pendingResult.finish()
             }
