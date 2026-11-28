@@ -78,14 +78,14 @@ internal fun DefaultAppRoute(
         NavDestination.Qibla.route -> QiblaRoute(navController, topBarController)
         NavDestination.Tracker.route -> TrackerRoute(navController, topBarController)
         NavDestination.Sounds.route -> SoundSettingsRoute(navController)
-        "settings" -> SettingsRoute(navController)
-        "notifications_settings" -> NotificationSettingsRoute(navController)
-        "permissions" -> PermissionsRoute(
+        AppRoute.SETTINGS -> SettingsRoute(navController)
+        AppRoute.NOTIFICATIONS_SETTINGS -> NotificationSettingsRoute(navController)
+        AppRoute.PERMISSIONS -> PermissionsRoute(
             onBackClick = { navController.popBackStack() },
             fontSizeMultiplier = sharedFontScale(navController)
         )
-        "city_selection" -> CitySelectionRoute(navController)
-        "about" -> com.anttech.prayertimes.features.settings.ui.AboutScreen(
+        AppRoute.CITY_SELECTION -> CitySelectionRoute(navController)
+        AppRoute.ABOUT -> com.anttech.prayertimes.features.settings.ui.AboutScreen(
             onBackClick = { navController.popBackStack() }
         )
     }
@@ -339,10 +339,10 @@ internal fun SettingsRoute(navController: NavHostController) {
         },
         onBackClick = { navController.popBackStack() },
         onSoundSettingsClick = { navController.navigate(NavDestination.Sounds.route) },
-        onNotificationsClick = { navController.navigate("notifications_settings") },
-        onCitySelectionClick = { navController.navigate("city_selection") },
-        onAboutClick = { navController.navigate("about") },
-        onPermissionsClick = { navController.navigate("permissions") }
+        onNotificationsClick = { navController.navigate(AppRoute.NOTIFICATIONS_SETTINGS) },
+        onCitySelectionClick = { navController.navigate(AppRoute.CITY_SELECTION) },
+        onAboutClick = { navController.navigate(AppRoute.ABOUT) },
+        onPermissionsClick = { navController.navigate(AppRoute.PERMISSIONS) }
     )
 }
 

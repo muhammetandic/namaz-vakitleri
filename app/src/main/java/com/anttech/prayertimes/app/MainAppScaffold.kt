@@ -30,6 +30,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.anttech.prayertimes.navigation.DefaultAppRoute
+import com.anttech.prayertimes.navigation.AppRoute
 import com.anttech.prayertimes.navigation.NavDestination
 import com.anttech.prayertimes.navigation.TopBarController
 
@@ -73,7 +74,7 @@ fun MainAppScaffold(
                     actions = {
                         topBarConfig?.actions?.invoke()
                         IconButton(
-                            onClick = { navController.navigate("settings") },
+                            onClick = { navController.navigate(AppRoute.SETTINGS) },
                             modifier = Modifier
                                 .padding(end = 8.dp)
                                 .testTag("open_settings_button")
@@ -159,23 +160,23 @@ fun MainAppScaffold(
             composable(NavDestination.Tracker.route) {
                 routeContent(NavDestination.Tracker.route, navController, topBarController)
             }
-            composable("sound_settings") {
-                routeContent("sound_settings", navController, topBarController)
+            composable(AppRoute.SOUNDS) {
+                routeContent(AppRoute.SOUNDS, navController, topBarController)
             }
-            composable("settings") {
-                routeContent("settings", navController, topBarController)
+            composable(AppRoute.SETTINGS) {
+                routeContent(AppRoute.SETTINGS, navController, topBarController)
             }
-            composable("notifications_settings") {
-                routeContent("notifications_settings", navController, topBarController)
+            composable(AppRoute.NOTIFICATIONS_SETTINGS) {
+                routeContent(AppRoute.NOTIFICATIONS_SETTINGS, navController, topBarController)
             }
-            composable("permissions") {
-                routeContent("permissions", navController, topBarController)
+            composable(AppRoute.PERMISSIONS) {
+                routeContent(AppRoute.PERMISSIONS, navController, topBarController)
             }
-            composable("city_selection") {
-                routeContent("city_selection", navController, topBarController)
+            composable(AppRoute.CITY_SELECTION) {
+                routeContent(AppRoute.CITY_SELECTION, navController, topBarController)
             }
-            composable("about") {
-                routeContent("about", navController, topBarController)
+            composable(AppRoute.ABOUT) {
+                routeContent(AppRoute.ABOUT, navController, topBarController)
             }
         }
     }

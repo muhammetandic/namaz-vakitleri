@@ -8,17 +8,30 @@ import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.ui.graphics.vector.ImageVector
 
+object AppRoute {
+    const val TIMES = "times"
+    const val IMSAKIYE = "imsakiye"
+    const val QIBLA = "qibla"
+    const val TRACKER = "tracker"
+    const val SOUNDS = "sound_settings"
+    const val SETTINGS = "settings"
+    const val NOTIFICATIONS_SETTINGS = "notifications_settings"
+    const val PERMISSIONS = "permissions"
+    const val CITY_SELECTION = "city_selection"
+    const val ABOUT = "about"
+}
+
 sealed class NavDestination(
     val route: String,
     val title: String,
     val icon: ImageVector,
     val testTag: String
 ) {
-    object Times : NavDestination("times", "Vakitler", Icons.Default.AccessTime, "nav_times")
-    object Imsakiye : NavDestination("imsakiye", "İmsakiye", Icons.Default.DateRange, "nav_imsakiye")
-    object Qibla : NavDestination("qibla", "Kıble", Icons.Default.Explore, "nav_qibla")
-    object Tracker : NavDestination("tracker", "Zikir", Icons.Default.TouchApp, "nav_tracker")
-    object Sounds : NavDestination("sound_settings", "Sesler", Icons.Default.MusicNote, "nav_sounds")
+    object Times : NavDestination(AppRoute.TIMES, "Vakitler", Icons.Default.AccessTime, "nav_times")
+    object Imsakiye : NavDestination(AppRoute.IMSAKIYE, "İmsakiye", Icons.Default.DateRange, "nav_imsakiye")
+    object Qibla : NavDestination(AppRoute.QIBLA, "Kıble", Icons.Default.Explore, "nav_qibla")
+    object Tracker : NavDestination(AppRoute.TRACKER, "Zikir", Icons.Default.TouchApp, "nav_tracker")
+    object Sounds : NavDestination(AppRoute.SOUNDS, "Sesler", Icons.Default.MusicNote, "nav_sounds")
 
     companion object {
         /**
